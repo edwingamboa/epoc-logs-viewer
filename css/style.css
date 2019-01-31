@@ -1,0 +1,51 @@
+.c3-region.region1 {
+  fill: #e6194B;
+}
+.c3-region.region2 {
+  fill: #3cb44b;
+}
+.c3-region.region3 {
+  fill: #ffe119;
+}
+.c3-region.region4 {
+  fill: #4363d8;
+}
+.c3-region.region22 {
+  fill: #f58231;
+}
+.c3-region.region23 {
+  fill: #911eb4;
+}
+.c3-region.region24 {
+  fill: #42d4f4;
+}
+.c3-region.region25 {
+  fill: #f032e6;
+}
+.c3-region.region26 {
+  fill: #bfef45;
+}
+.c3-region.region27 {
+  fill: #fabebe;
+}
+.c3-region.region28 {
+  fill: #469990
+}
+.c3-region.region29 {
+  fill: #808000;
+}
+.c3-region.region30 {
+  fill: #9A6324
+}
+.c3-region {
+  fill-opacity: 0.4 !important;
+}
+#regionsIndicators {
+  width: 15%;
+  padding: 1em;
+  float: right;
+}
+#measuresViewer {
+  width: 80%;
+  float: left;
+}
