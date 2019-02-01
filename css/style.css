@@ -39,6 +39,7 @@
 }
 .c3-region {
   fill-opacity: 0.4 !important;
+  stroke: #b8b7b7;
 }
 #regionsIndicators {
   width: 15%;
