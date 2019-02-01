@@ -41,12 +41,12 @@
   fill-opacity: 0.4 !important;
   stroke: #b8b7b7;
 }
-#regionsIndicators {
+.regions-indicators {
   width: 15%;
   padding: 1em;
   float: right;
 }
-#measuresViewer {
+.chart-viewer {
   width: 80%;
   float: left;
 }
