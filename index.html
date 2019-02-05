@@ -18,6 +18,18 @@
 
 
 <body>
+    <div>
+        <label for="pmFileUrl">Performance measures log files:</label>
+        <input type="file" id="pmFileUrl">
+    </div>
+    <div>
+        <label for="userTraceFileUrl">User trace log files:</label>
+        <input type="file" id="userTraceFileUrl">
+    </div>
+    <div>
+        <strong>Loaded files:</strong> <span id="loadedFilesText"></span>
+    </div>
+
     <div id="measuresViewer" class="chart-viewer"></div>
     <div id="trendsViewer" class="chart-viewer"></div>
     <script src="lib/index.js"></script>

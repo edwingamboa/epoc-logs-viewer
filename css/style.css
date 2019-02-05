@@ -1,7 +1,3 @@
-.user-trace-grid-lines line {
-  stroke: darkcyan;
-}
-
 .chart-viewer {
-  height: 50vh;
+  height: 40vh;
 }
