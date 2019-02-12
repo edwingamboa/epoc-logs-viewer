@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <div class="main-content">
+        <div id="mainContent">
             <h2>Overview</h2>
             <div class="row">
                 <div id="measuresViewer" class="chart-viewer col"></div>
@@ -51,10 +51,17 @@
                 </div>
             </div>
             <div class="row">
-                <div id="toleranceElapTimeEvents" class="col"></div>
+                <div id="toleranceElapTimeEvents" class="col form-group"></div>
             </div>
             <div class="row">
                 <div id="trendsViewer" class="chart-viewer col"></div>
+            </div>
+        </div>
+        <div id="progressSpinner">
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
             </div>
         </div>
     </div>

@@ -1,3 +1,7 @@
 .chart-viewer {
   height: 40vh;
 }
+
+#mainContent, #progressSpinner {
+  display: none;
+}
