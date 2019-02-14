@@ -1,4 +1,3 @@
-
 /* globals FileReader, axios, c3, d3, ss */
 (function () {
   const EPOC_MEASURES_CONTAINER_ID = 'measuresViewer';
