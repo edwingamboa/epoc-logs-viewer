@@ -1,4 +1,10 @@
-/* globals FileReader, axios, c3, d3, ss */
+import '../styles/main_style.css';
+import '../styles/bootstrap.min.css';
+import 'c3/c3.css';
+import * as d3 from 'd3';
+import * as ss from 'simple-statistics'
+import c3 from 'c3';
+
 (function () {
   const EPOC_MEASURES_CONTAINER_ID = 'measuresViewer';
   const TRENDS_VIEWER_CONTAINER_ID = 'trendsViewer';

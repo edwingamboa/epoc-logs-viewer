@@ -29,8 +29,11 @@
   },
   "homepage": "https://github.com/edwingamboa/epoc-logs-viewer#readme",
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
     "autoprefixer": "^8.6.5",
-    "babel-jest": "^23.0.1",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^0.28.11",
     "eslint": "^5.8.0",
@@ -58,5 +61,10 @@
     "webpack-dev-middleware": "^3.4.0",
     "webpack-dev-server": "^3.1.10",
     "webpack-merge": "^4.1.4"
+  },
+  "dependencies": {
+    "c3": "^0.6.12",
+    "d3": "^5.9.1",
+    "simple-statistics": "^7.0.1"
   }
 }

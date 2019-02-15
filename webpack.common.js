@@ -8,21 +8,15 @@ const devMode = process.env.NODE_ENV !== 'production';
 
 module.exports = {
   entry: {
-    d3: './src/vendor/d3/d3.js',
-    c3: './src/vendor/c3/c3.js',
-    ss: './src/vendor/simple-statistics/simple-statistics.min.js',
-    app: './src/scripts/index.js',
-    main_style: './src/styles/main_style.css',
-    bootstrap_style: './src/styles/bootstrap.min.css',
-    c3_style: './src/vendor/c3/c3.css'
+    app: './src/scripts/index.js'
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules|index\.js/,
         use: {
-          loader: 'script-loader'
+          loader: 'babel-loader'
         }
       },
       {
