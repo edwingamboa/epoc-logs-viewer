@@ -4,82 +4,12 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import * as ss from 'simple-statistics'
 import c3 from 'c3';
+import * as constants from './constants';
 
 (function () {
-  const EPOC_MEASURES_CONTAINER_ID = 'measuresViewer';
-  const TRENDS_VIEWER_CONTAINER_ID = 'trendsViewer';
-  const PM_FILE_INPUT_ID = 'pmFileUrl';
-  const UT_FILE_INPUT_ID = 'userTraceFileUrl';
-  const LOADED_FILES_TEXT_ID = 'loadedFilesText';
-  const TREND_CHART_R_BTNS_DIV_ID = 'trendChartPmRBtnsDiv';
-  const DEFAULT_TREND_CHART_PM_ID = 'SCA_ENG';
-  const TOLERANCE_TIME_DIV_ID = 'toleranceElapTimeEvents';
-  const MAIN_CONTENT_DIV_ID = 'mainContent';
-  const PROGRESS_SPINNER_ID = 'progressSpinner';
-  const DEFAULT_SEGMENT_DISTANCE = 50;
-  const traceLogsInfo = new Map([
-    ['sessionId', { initCol: 0 }],
-    ['testerNumber', { initCol: 1 }],
-    ['timestamp', { initCol: 2 }],
-    ['msElapsedSinceLastEvent', { initCol: 3 }],
-    ['action', { initCol: 4 }],
-    ['actionD1', {
-      initCol: 5,
-      values: {
-        link: [
-          'Link_Orientierung_xpage',
-          'Link_Theorie_xpage',
-          'Link_Grundprinzip_xpage',
-          'Link_Berechnung_xpage',
-          'Link_Raue_Oberflächen_xpage',
-          'Link_Anwendung_xpage',
-          'Link_FAQ_xpage',
-          'Link_Zusammenfassung_xpage',
-          'Link_Wiederholungsfragen_xpage',
-          'Link_Quellen_xpage'
-        ]
-      }
-    }],
-    ['actionD2', { initCol: 6 }],
-    ['actionD3', { initCol: 7 }]
-  ]);
-  const pmLogsInfo = new Map([
-    ['TimeStamp', { initCol: 0, verbose: 'Time Stamp' }],
-    ['SCA_ENG', { initCol: 1, verbose: 'Engagement' }],
-    ['SCA_VAL', { initCol: 6, verbose: 'Interest' }],
-    ['SCA_MED', { initCol: 11, verbose: 'Relaxation' }],
-    ['SCA_FRU', { initCol: 16, verbose: 'Stress' }],
-    ['SCA_FOC', { initCol: 21, verbose: 'Focus' }],
-    ['SCA_EXC', { initCol: 26, verbose: 'Excitement' }],
-    ['SCA_LEX', { initCol: 31, verbose: 'Long-term excitement' }],
-    ['pmIds', ['SCA_ENG', 'SCA_VAL', 'SCA_MED', 'SCA_FRU', 'SCA_FOC', 'SCA_EXC', 'SCA_LEX']]
-  ]);
-  const epocEventsData = {
-    '1': 'Eyes opened start',
-    '2': 'Eyes opened end',
-    '3': 'Eyes closed start',
-    '4': 'Eyes closed end',
-    '22': 'Kapitelwechsel',
-    '23': 'Einschätzung',
-    '24': 'Bewegung',
-    '25': 'Störgeräusche',
-    '26': 'Formel',
-    '27': 'Begriffe',
-    '28': 'Game/Quiz',
-    '29': 'Fragebogen',
-    '30': 'Texteingabe'
-  };
-
-  const userTraceActionsIds = {
-    booklet_switch: 1,
-    link: 2,
-    navigate: 3,
-    user_rating: 4
-  };
-
-  var pmFileInput = document.querySelector('#' + PM_FILE_INPUT_ID);
-  var userTraceFileInput = document.querySelector('#' + UT_FILE_INPUT_ID);
-  var loadedFilesTextElement = document.querySelector('#' + LOADED_FILES_TEXT_ID);
+  var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
+  var userTraceFileInput = document.querySelector('#' + constants.UT_FILE_INPUT_ID);
+  var loadedFilesTextElement = document.querySelector('#' + constants.LOADED_FILES_TEXT_ID);
   var pmCsvRequest;
   var userTraceCsvRequest;
   var pmMeasures;
@@ -105,7 +35,7 @@ import c3 from 'c3';
 
         addChart(
           pmMeasures,
-          EPOC_MEASURES_CONTAINER_ID,
+          constants.EPOC_MEASURES_CONTAINER_ID,
           userTraceRegions,
           addDetailsToUserTraceGridLines
         );
@@ -116,7 +46,7 @@ import c3 from 'c3';
         var eventsOfInterestGridLines = parseUserTraceAsGridLines(segments);
         trendsChart = addChart(
           relativeChangeValsAndEvents,
-          TRENDS_VIEWER_CONTAINER_ID,
+          constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines
         );
@@ -135,16 +65,16 @@ import c3 from 'c3';
   }
 
   function switchToMainContent () {
-    var mainContentDiv = document.querySelector('#' + MAIN_CONTENT_DIV_ID);
+    var mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
     mainContentDiv.style.display = 'block';
-    var progressSpinner = document.querySelector('#' + PROGRESS_SPINNER_ID);
+    var progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
     progressSpinner.style.display = 'none';
   }
 
   function switchToProgressSpinner () {
-    var mainContentDiv = document.querySelector('#' + MAIN_CONTENT_DIV_ID);
+    var mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
     mainContentDiv.style.display = 'none';
-    var progressSpinner = document.querySelector('#' + PROGRESS_SPINNER_ID);
+    var progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
     progressSpinner.style.display = 'block';
   }
 
@@ -198,7 +128,7 @@ import c3 from 'c3';
   }
 
   function changeDataOfTrendChart (pmId, onloaded) {
-    pmId = pmId || DEFAULT_TREND_CHART_PM_ID;
+    pmId = pmId || constants.DEFAULT_TREND_CHART_PM_ID;
     var relativeChangeValsAndEvents = calculateTrendDataOfPm(pmMeasures, segments, pmId);
     var loadData = {
       rows: relativeChangeValsAndEvents,
@@ -259,7 +189,7 @@ import c3 from 'c3';
     var events = extractRegionsOfInterest(regionsAsCsv);
     function getLineObject (event) {
       return {
-        text: epocEventsData.hasOwnProperty(event.id) ? epocEventsData[event.id] : '',
+        text: constants.epocEventsData.hasOwnProperty(event.id) ? constants.epocEventsData[event.id] : '',
         value: event.time,
         class: 'epoc-events-grid-lines' + event.id,
         position: 'start'
@@ -292,23 +222,23 @@ import c3 from 'c3';
 
   function extractScaPerformanceMeasuresFromCSV (csv, desiredPms) {
     var dataRows = [];
-    desiredPms = desiredPms || pmLogsInfo.get('pmIds');
+    desiredPms = desiredPms || constants.pmLogsInfo.get('pmIds');
     getLinesOfCSV(csv).forEach(function (line, i) {
       if (line !== '') {
         var columns = getColumnsOfACsvLine(line);
         var newColumns = [];
         if (i > 0) {
           newColumns.push(
-            dateBasedOnTimeStampMs(columns[pmLogsInfo.get('TimeStamp').initCol])
+            dateBasedOnTimeStampMs(columns[constants.pmLogsInfo.get('TimeStamp').initCol])
           );
           desiredPms.forEach(function (pm) {
-            newColumns.push(columns[pmLogsInfo.get(pm).initCol]);
-            pmLogsInfo.get(pm).newCol = newColumns.length - 1;
+            newColumns.push(columns[constants.pmLogsInfo.get(pm).initCol]);
+            constants.pmLogsInfo.get(pm).newCol = newColumns.length - 1;
           });
         } else {
           newColumns.push('TimeStamp');
           desiredPms.forEach(function (pm) {
-            newColumns.push(pm + ' ' + pmLogsInfo.get(pm).verbose);
+            newColumns.push(pm + ' ' + constants.pmLogsInfo.get(pm).verbose);
           });
         }
         dataRows.push(newColumns);
@@ -323,9 +253,9 @@ import c3 from 'c3';
       if (line !== '' && index > 0) {
         var columns = getColumnsOfACsvLine(line, ';');
         dataRows.push({
-          time: new Date(columns[traceLogsInfo.get('timestamp').initCol]),
-          action: columns[traceLogsInfo.get('action').initCol],
-          details: columns.slice(traceLogsInfo.get('action').initCol).join(' ')
+          time: new Date(columns[constants.traceLogsInfo.get('timestamp').initCol]),
+          action: columns[constants.traceLogsInfo.get('action').initCol],
+          details: columns.slice(constants.traceLogsInfo.get('action').initCol).join(' ')
         });
       }
     });
@@ -375,8 +305,8 @@ import c3 from 'c3';
         text: userTrace.action,
         details: userTrace.details,
         value: userTrace.time,
-        class: 'user-trace-grid-lines' + ' ' + (userTraceActionsIds.hasOwnProperty(userTrace.action)
-          ? userTraceActionsIds[userTrace.action] : '')
+        class: 'user-trace-grid-lines' + ' ' + (constants.userTraceActionsIds.hasOwnProperty(userTrace.action)
+          ? constants.userTraceActionsIds[userTrace.action] : '')
       };
     }
     return buildGridLinesList(userTraces, getLineObject);
@@ -419,8 +349,8 @@ import c3 from 'c3';
 
   function calculateTrendDataOfPm (pmList, segments, pmId) {
     pmId = pmId || 'SCA_ENG';
-    const timeColumnIndex = pmLogsInfo.get('TimeStamp').initCol;
-    const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
+    const timeColumnIndex = constants.pmLogsInfo.get('TimeStamp').initCol;
+    const columnIndex = constants.pmLogsInfo.get(pmId).newCol || constants.pmLogsInfo.get(pmId).initCol;
 
     var initialPmVal = pmList[1][columnIndex];
     var currentPmVal;
@@ -482,11 +412,11 @@ import c3 from 'c3';
   }
 
   function appendRBtnsForTrendChart () {
-    pmLogsInfo.get('pmIds').forEach(function (pmId) {
-      var pmInput = createInputElement(pmId, 'trendChartPM', pmId === DEFAULT_TREND_CHART_PM_ID);
-      var labelText = pmId + ' ' + pmLogsInfo.get(pmId).verbose;
+    constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
+      var pmInput = createInputElement(pmId, 'trendChartPM', pmId === constants.DEFAULT_TREND_CHART_PM_ID);
+      var labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
       var pmLabel = createLabelElement(pmId, labelText, 'form-check-label');
-      var trendChartRBtnsDiv = document.querySelector('#' + TREND_CHART_R_BTNS_DIV_ID);
+      var trendChartRBtnsDiv = document.querySelector('#' + constants.TREND_CHART_R_BTNS_DIV_ID);
       var inputGroupContainer = document.createElement('div');
       inputGroupContainer.setAttribute('class', 'form-check form-check-inline');
       inputGroupContainer.appendChild(pmInput);
@@ -516,7 +446,7 @@ import c3 from 'c3';
     var elapTimeInput = createNumberInput();
     var elapTimeLabel = createLabelElement(elapTimeInputId, 'Minimum seconds between events:');
 
-    var inputContainer = document.querySelector('#' + TOLERANCE_TIME_DIV_ID);
+    var inputContainer = document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID);
     inputContainer.appendChild(elapTimeLabel);
     inputContainer.appendChild(elapTimeInput);
 
@@ -531,7 +461,7 @@ import c3 from 'c3';
       elapTimeInput.setAttribute('type', 'number');
       elapTimeInput.setAttribute('step', 10);
       elapTimeInput.setAttribute('min', 0);
-      elapTimeInput.setAttribute('value', DEFAULT_SEGMENT_DISTANCE);
+      elapTimeInput.setAttribute('value', constants.DEFAULT_SEGMENT_DISTANCE);
       return elapTimeInput;
     }
   }
@@ -549,10 +479,10 @@ import c3 from 'c3';
   function updateTrendSegments (segmentDistance) {
     segments = extractSegmentsFromTraceEvents(
       userTraceLogs,
-      traceLogsInfo.get('actionD1').values.link,
-      traceLogsInfo.get('timestamp').initCol,
-      traceLogsInfo.get('actionD1').initCol,
-      segmentDistance || DEFAULT_SEGMENT_DISTANCE
+      constants.traceLogsInfo.get('actionD1').values.link,
+      constants.traceLogsInfo.get('timestamp').initCol,
+      constants.traceLogsInfo.get('actionD1').initCol,
+      segmentDistance || constants.DEFAULT_SEGMENT_DISTANCE
     );
   }
 
