@@ -20,6 +20,10 @@ class DateProcessor {
   static elapsedMinutes (initTime, finishTime) {
     return elapsedSeconds(initTime, finishTime) / 60;
   }
+  
+  static dateBasedOnTimeStampMs (timestamp) {
+    return new Date(parseFloat(timestamp) * 1000);
+  }
 }
 
 export { CsvProcessor, DateProcessor };
