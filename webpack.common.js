@@ -6,8 +6,11 @@ const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
 
+const appTitle = 'EPOC PMs Viewer';
+
 module.exports = {
   entry: {
+    collective: './src/scripts/collective-analysis.js',
     app: './src/scripts/index.js'
   },
   module: {
@@ -49,8 +52,22 @@ module.exports = {
     }),
     // it will replace our index.html file with a newly generated one
     new HtmlWebpackPlugin({
-      title: 'EPOC PMs Viewer',
-      template: './src/index.html'
+      template: './src/index.html',
+      inject: 'body',
+      filename: 'index.html',
+      templateParameters: {
+        appTitle: `${appTitle}`
+      },
+      chunks: [ 'app' ]
+    }),
+    new HtmlWebpackPlugin({
+      inject: 'body',
+      template: './src/collective-analysis.html',
+      filename: 'collective.html',
+      templateParameters: {
+        appTitle: `${appTitle}`
+      },
+      chunks: [ 'collective' ]
     }),
     // Enabling Hot Module Replacement
     new webpack.NamedModulesPlugin(),
@@ -59,11 +76,5 @@ module.exports = {
   output: {
     filename: devMode ? '[name].js' : '[name].[hash].js',
     path: path.resolve(__dirname, 'dist')
-  },
-  optimization: {
-    // prevent to duplicate dependencies
-    splitChunks: {
-      chunks: 'all'
-    }
   }
 };
