@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
 import EventsTrace from './events-trace';
-import PerformanceMeasures from './performance-measures-trace'
+import PerformanceMeasuresTrace from './performance-measures-trace'
 
 (function () {
   var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
@@ -30,7 +30,7 @@ import PerformanceMeasures from './performance-measures-trace'
     Promise.all(requests)
       .then(function (responses) {
         eventsTrace = new EventsTrace(responses[1].data);
-        performanceMeasuresTrace = new PerformanceMeasures(responses[0].data, eventsTrace.segments);
+        performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
 
         var userTraceEventsLines = parseUserTraceAsGridLines(eventsTrace.events);
         addChart(
