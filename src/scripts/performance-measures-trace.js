@@ -9,6 +9,7 @@ class PerformanceMeasuresTrace {
   }
 
   update(csv, segments, desiredPms) {
+    this.segmentsInfo = [];
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updatePerformanceMeasures(desiredPms);
     this.updateTrendDate(segments);
@@ -75,7 +76,7 @@ class PerformanceMeasuresTrace {
     var segmentsWithIndexes = this.addIndexesToSegments(segments, this.data.slice(1), timeColumnIndex);
     segmentsWithIndexes.forEach(function (segment) {
       if (segment.hasOwnProperty('initIndex')) {
-        this.addTrendPoints(relEngChangeVals, segment.initIndex, segment.finishIndex || relEngChangeVals.length - 1);
+        this.addSegment(relEngChangeVals, segment);
       }
     }.bind(this));
     return [['TimeStamp', 'Relative Change', 'Trend']].concat(relEngChangeVals);
@@ -99,10 +100,33 @@ class PerformanceMeasuresTrace {
     return segments;
   }
 
-  addTrendPoints (data, segmentInitIndex, segmentFinalIndex) {
-    var f = ss.linearRegressionLine(ss.linearRegression(data.slice(segmentInitIndex, segmentFinalIndex + 1)));
-    data[segmentInitIndex][2] = f(data[segmentInitIndex][0]);
-    data[segmentFinalIndex][2] = f(data[segmentFinalIndex][0]);
+  addSegment(trendData, segment) {
+    let segmentFinalIndex = segment.finishIndex || trendData.length - 1;
+    let trendFunction = ss.linearRegressionLine(ss.linearRegression(trendData.slice(segment.initIndex, segmentFinalIndex + 1)));
+    let initTrendValue = trendFunction(trendData[segment.initIndex][0]);
+    let finishTrendValue = trendFunction(trendData[segmentFinalIndex][0]);
+    this.addTrendPointsToSegment(
+      trendData,
+      segment.initIndex,
+      segmentFinalIndex,
+      initTrendValue,
+      finishTrendValue
+    );
+    
+    let segmentInfo = {
+      segment: segment,
+      isEngaged: this.isEngaged(initTrendValue, finishTrendValue)
+    } 
+    this.segmentsInfo.push(segmentInfo);
+  }
+
+  isEngaged(initRelEngChange, finishRelEngChange) {
+    return (finishRelEngChange - initRelEngChange) > 0;
+  }
+
+  addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {    
+    trendData[segmentInitIndex][2] = initTrendValue;
+    trendData[segmentFinalIndex][2] = finishTrendValue;
   }
 
   relativePmChange (currentPm, initialPm) {
