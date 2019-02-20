@@ -1,4 +1,5 @@
-import { CsvProcessor, DateProcessor } from "./utils";
+import { CsvProcessor, DateProcessor } from './utils';
+import { linkEvents } from './constants'
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -9,18 +10,7 @@ const traceLogsInfo = new Map([
   ['actionD1', {
     initCol: 5,
     values: {
-      link: [
-        'Link_Orientierung_xpage',
-        'Link_Theorie_xpage',
-        'Link_Grundprinzip_xpage',
-        'Link_Berechnung_xpage',
-        'Link_Raue_Oberflächen_xpage',
-        'Link_Anwendung_xpage',
-        'Link_FAQ_xpage',
-        'Link_Zusammenfassung_xpage',
-        'Link_Wiederholungsfragen_xpage',
-        'Link_Quellen_xpage'
-      ]
+      link: linkEvents
     }
   }],
   ['actionD2', { initCol: 6 }],

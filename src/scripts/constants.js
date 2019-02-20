@@ -44,3 +44,29 @@ export const pmLogsInfo = new Map([
   ['SCA_LEX', { initCol: 31, verbose: 'Long-term excitement' }],
   ['pmIds', ['SCA_ENG', 'SCA_VAL', 'SCA_MED', 'SCA_FRU', 'SCA_FOC', 'SCA_EXC', 'SCA_LEX']]
 ]);
+
+export const linkEvents = [
+  'Link_Orientierung_xpage',
+  'Link_Theorie_xpage',
+  'Link_Grundprinzip_xpage',
+  'Link_Berechnung_xpage',
+  'Link_Raue_Oberflächen_xpage',
+  'Link_Anwendung_xpage',
+  'Link_FAQ_xpage',
+  'Link_Zusammenfassung_xpage',
+  'Link_Wiederholungsfragen_xpage',
+  'Link_Quellen_xpage'
+];
+
+export const segmentsOfInterest = [
+  'Link_Orientierung_xpage',
+  'Link_Theorie_xpage',
+  // 'Link_Grundprinzip_xpage',
+  // 'Link_Berechnung_xpage',
+  'Link_Raue_Oberflächen_xpage',
+  'Link_Anwendung_xpage',
+  'Link_FAQ_xpage',
+  'Link_Zusammenfassung_xpage',
+  'Link_Wiederholungsfragen_xpage',
+  'Link_Quellen_xpage'
+];

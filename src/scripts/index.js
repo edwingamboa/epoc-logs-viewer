@@ -5,7 +5,8 @@ import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
 import EventsTrace from './events-trace';
-import PerformanceMeasuresTrace from './performance-measures-trace'
+import PerformanceMeasuresTrace from './performance-measures-trace';
+import { UIProcessor } from './utils';
 
 (function () {
   var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
@@ -54,25 +55,11 @@ import PerformanceMeasuresTrace from './performance-measures-trace'
           appendElapTimeInputForTrendChart();
           firstRun = false;
         }
-        switchToMainContent();
+        UIProcessor.switchToMainContent();
       })
       .catch(function (error) {
         console.error(error);
       });
-  }
-
-  function switchToMainContent () {
-    var mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
-    mainContentDiv.style.display = 'block';
-    var progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
-    progressSpinner.style.display = 'none';
-  }
-
-  function switchToProgressSpinner () {
-    var mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
-    mainContentDiv.style.display = 'none';
-    var progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
-    progressSpinner.style.display = 'block';
   }
 
   function handleFileLoading (file, id) {
@@ -83,7 +70,7 @@ import PerformanceMeasuresTrace from './performance-measures-trace'
     }
     if (pmCsvRequest && userTraceCsvRequest) {
       disableFileChoosers();
-      switchToProgressSpinner();
+      UIProcessor.switchToProgressSpinner();
       run([pmCsvRequest, userTraceCsvRequest]);
     }
   }

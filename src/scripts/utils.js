@@ -1,3 +1,5 @@
+import * as constants from './constants';
+
 class CsvProcessor {
   static extractLines (csv) {
     return csv.split('\n');
@@ -26,4 +28,20 @@ class DateProcessor {
   }
 }
 
-export { CsvProcessor, DateProcessor };
+class UIProcessor {
+  static switchToMainContent () {
+    let mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
+    mainContentDiv.style.display = 'block';
+    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
+    progressSpinner.style.display = 'none';
+  }
+
+  static switchToProgressSpinner () {
+    let mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
+    mainContentDiv.style.display = 'none';
+    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
+    progressSpinner.style.display = 'block';
+  }
+}
+
+export { CsvProcessor, DateProcessor, UIProcessor };
