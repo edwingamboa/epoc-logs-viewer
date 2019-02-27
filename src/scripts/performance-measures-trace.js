@@ -78,7 +78,7 @@ class PerformanceMeasuresTrace {
     var segmentsWithIndexes = this.addIndexesToSegments(segments, this.data.slice(1), timeColumnIndex);
     segmentsWithIndexes.forEach(function (segment) {
       if (segment.hasOwnProperty('initIndex')) {
-        this.addSegment(relEngChangeVals, segment);
+        this.addSegment(relEngChangeVals, segment, pmId);
       }
     }.bind(this));
     return [['TimeStamp', 'Relative Change', 'Trend']].concat(relEngChangeVals);
@@ -102,7 +102,7 @@ class PerformanceMeasuresTrace {
     return segments;
   }
 
-  addSegment(relativeChangeData, segment) {
+  addSegment(relativeChangeData, segment, pmId) {
     let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
     let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1);
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
@@ -115,11 +115,14 @@ class PerformanceMeasuresTrace {
       initTrendValue,
       finishTrendValue
     );
+
+    const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     
     let segmentInfo = {
       segment: segment,
       isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
-      meanChangeValue: this.meanRelativePMChangeForSegmentData(segmentTrendData)
+      meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
+      meanPmValue : this.meanOfData(this.data.slice(segment.initIndex + 1, segmentFinalIndex + 2), columnIndex)
     } 
     this.segmentsInfo.push(segmentInfo);
   }
@@ -128,12 +131,16 @@ class PerformanceMeasuresTrace {
     return (finishRelEngChange - initRelEngChange) > 0;
   }
 
-  meanRelativePMChangeForSegmentData (segmentTrendData) {
-    let changeValues = [];
-    segmentTrendData.forEach(function(trendData) {
-      changeValues.push( trendData[CHANGE_VAL_INDEX_IN_TREND_DATA])
+  meanOfData (segmentData,valueIndex) {
+    let values = [];
+    segmentData.forEach(function(data) {
+      let value = data[valueIndex];
+      if (typeof value === 'string') {
+        value = parseFloat(value);
+      }
+      values.push(value)
     });
-    return ss.mean(changeValues);
+    return ss.mean(values);
   }
 
   addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {    

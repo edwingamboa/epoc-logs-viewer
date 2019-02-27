@@ -189,10 +189,10 @@ import { UIProcessor } from './utils';
     let segmentData = segmentsChartsData.get(segmentName);
 
     if(segmentInfo.isEngaged) {
-      segmentData.scatterData[ENGAGED_INDEX].push(segmentInfo.meanChangeValue);
+      segmentData.scatterData[ENGAGED_INDEX].push(segmentInfo.meanPmValue);
       segmentData.scatterData[ENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
     } else {
-      segmentData.scatterData[DISENGAGED_INDEX].push(segmentInfo.meanChangeValue);
+      segmentData.scatterData[DISENGAGED_INDEX].push(segmentInfo.meanPmValue);
       segmentData.scatterData[DISENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
     }
     segmentsChartsData.set(segmentName, segmentData);
