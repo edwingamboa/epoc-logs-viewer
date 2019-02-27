@@ -41,7 +41,7 @@ import { UIProcessor } from './utils';
 
   function createContainersForSegmentCharts(segmentName, barChartId, scatterChartId) {
     createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
-    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants distribution mean ' + currentPm);
+    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants\' mean ' + currentPm);
   }
 
   function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
