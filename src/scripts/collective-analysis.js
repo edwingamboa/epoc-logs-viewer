@@ -18,38 +18,94 @@ import { UIProcessor } from './utils';
   var firstRun = true;
   var pmCsvRequest;
   var userTraceCsvRequest;
+  var currentPm = 'SCA_ENG';
   var segmentsChartsData = new Map();
   const ENGAGED_INDEX = 0;
   const DISENGAGED_INDEX = 1;
+  const ENGAGED_X_INDEX = 2;
+  const DISENGAGED_X_INDEX = 3;
 
 
-  function createDataArrayForSegmentsOfInterest () {
+  function createMetaDataMapForSegmentsOfInterest () {
     constants.segmentsOfInterest.forEach(function (segmentName) {
-      createContainerForSegmentChart(segmentName)
-      let segmentData = [];
-      segmentData[ENGAGED_INDEX] = { name: 'engaged', percentage: 0, count: 0};
-      segmentData[DISENGAGED_INDEX] = { name: 'disengaged', percentage: 0, count: 0};
-
-      segmentsChartsData.set(segmentName, { 
-        data: segmentData,
-        chart: createChartsForSegmentOfInterest(segmentData, segmentName),
-        totalUsers: 0
-      })
+      let barChartId = segmentName + 'distributionChart';
+      let scatterChartId = segmentName + 'meanEngChart';
+      
+      createContainersForSegmentCharts(segmentName, barChartId, scatterChartId);
+      
+      let barChartData = generateInitialBarChartData();
+      let scatterColumns = generateInitialScatterData();
+      segmentsChartsData.set(segmentName, generateSegmentChartsData(barChartData, barChartId, scatterColumns, scatterChartId));
     });
   }
 
-  function createContainerForSegmentChart (segmentName) {
-    d3.select('#' + constants.MAIN_CONTENT_DIV_ID)
-    .append('div')
-    .append('h4')
-    .text('Participants distribution for ' + segmentName)
-    .append('div')
-    .attr('id', segmentName)
+  function createContainersForSegmentCharts(segmentName, barChartId, scatterChartId) {
+    createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution for ' + segmentName);
+    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants distribution for ' + segmentName)
   }
 
-  function createChartsForSegmentOfInterest (segmentData, segmentName) {
-    return c3.generate({
-      data: generateChartDataObjectForSegment(segmentData),
+  function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
+    let segmentChartsData = { 
+      distributionData: barChartData,
+      distributionChart: createChartForSegmentOfInterest(
+        generateChartObjectForSegment(barChartData, barChartId)
+      ),
+      totalUsers: 0,
+      scatterData: scatterColumns,
+      scatterChart: createChartForSegmentOfInterest(
+        generateChartObjectForScatter(scatterColumns, scatterChartId)
+      ),
+    };
+    return segmentChartsData;
+  }
+
+  function generateInitialScatterData () {
+    let scatterColumns = [];
+    scatterColumns[ENGAGED_INDEX] = [ 'engaged' ];
+    scatterColumns[DISENGAGED_INDEX] = [ 'disengaged' ];
+    scatterColumns[ENGAGED_X_INDEX] = [ 'engaged_x' ];
+    scatterColumns[DISENGAGED_X_INDEX] = [ 'disengaged_x' ];
+    return scatterColumns;
+  }
+  
+  function generateInitialBarChartData () {
+    let barChartData = [];
+    barChartData[ENGAGED_INDEX] = { name: 'engaged', percentage: 0, count: 0};
+    barChartData[DISENGAGED_INDEX] = { name: 'disengaged', percentage: 0, count: 0};
+    return barChartData;
+  } 
+
+  function createContainerForSegmentChart (segmentName, divId, title) {
+    let segmentChartsDiv = d3.select('#' + segmentName)
+    if (segmentChartsDiv.empty()) {
+      let mainContainer = d3.select('#' + constants.MAIN_CONTENT_DIV_ID)
+      segmentChartsDiv = mainContainer.append('div');
+      segmentChartsDiv.attr('id', segmentName);
+    }
+    let chartContainer = segmentChartsDiv.append('div');
+    chartContainer.append('h4')
+    .text(title)
+    .append('div')
+    .attr('id', divId);
+  }
+
+  function createChartForSegmentOfInterest (config) {
+    return c3.generate(config)
+  }
+
+  function generateChartObjectForSegment (segmentData, divId) {
+    return {
+      data: { 
+        json: segmentData,
+        keys: {
+          x: 'name',
+          value: [ 'percentage' ]
+        },
+        type: 'bar',
+        labels: {
+          format: function (v) { return v + '%' }
+        }
+      },
       axis: {
         x: {
           type: 'category'
@@ -62,49 +118,94 @@ import { UIProcessor } from './utils';
           max: 100
         }
       },
-      bindto: '#' + segmentName,
+      bindto: '#' + divId,
       legend: {
           show: false
       }
-    })
+    }    
   }
 
-  function generateChartDataObjectForSegment (segmentData) {
-    return { 
-      json: segmentData,
-      keys: {
-        x: 'name',
-        value: [ 'percentage' ]
+  function generateChartObjectForScatter (segmentData, divId) {
+    return {
+      data: { 
+        columns: segmentData,
+        type: 'scatter',
+        xs: {
+          engaged: 'engaged_x',
+          disengaged: 'disengaged_x',
+        }
       },
-      type: 'bar',
-      labels: {
-        format: function (v) { return v + '%' }
-      }
+      axis: {
+        x: {
+          type: 'category'
+        },
+        y: {
+          label: {
+            text: 'Mean ' + currentPm,
+            position: 'outer-middle'
+          },
+          max: 1,
+          min: -1
+        }
+      },
+      bindto: '#' + divId,
     }
   }
 
-  function addUserTraceToData (segmentName, isEngaged) {
+  function addUserTraceToData (segmentInfo) {
+    let segmentName = segmentInfo.segment.action;
     if (segmentsChartsData.has(segmentName)) {
-      let segmentData = segmentsChartsData.get(segmentName);
+      updateBarChartsData(segmentInfo);
+      updateScatterChartsData(segmentInfo);
+    }
+  }
+
+  function updateBarChartsData (segmentInfo) {
+    let segmentName = segmentInfo.segment.action;
+    let segmentData = segmentsChartsData.get(segmentName);
       segmentData.totalUsers += 1;
 
-      let dataIndex = isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
-      segmentData.data[dataIndex].count += 1;
+      let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
+      segmentData.distributionData[dataIndex].count += 1;
 
-      segmentData.data[ENGAGED_INDEX].percentage = calculatePercentage(segmentData.data[ENGAGED_INDEX].count, segmentData.totalUsers);
-      segmentData.data[DISENGAGED_INDEX].percentage = calculatePercentage(segmentData.data[DISENGAGED_INDEX].count, segmentData.totalUsers);
-
-      segmentsChartsData.set(segmentName, segmentData);
-
-      updateSegmentChart (segmentName);
-    }
+      segmentData.distributionData[ENGAGED_INDEX].percentage = calculatePercentage(
+        segmentData.distributionData[ENGAGED_INDEX].count,
+        segmentData.totalUsers
+        );
+      segmentData.distributionData[DISENGAGED_INDEX].percentage = calculatePercentage(
+        segmentData.distributionData[DISENGAGED_INDEX].count,
+        segmentData.totalUsers
+        );
+    segmentsChartsData.set(segmentName, segmentData);
+    updateBarCharts(segmentName);
   }
 
-  function updateSegmentChart (segmentName) {
+  function updateScatterChartsData (segmentInfo) {
+    let segmentName = segmentInfo.segment.action;
+    let segmentData = segmentsChartsData.get(segmentName);
+
+    if(segmentInfo.isEngaged) {
+      segmentData.scatterData[ENGAGED_INDEX].push(segmentInfo.meanChangeValue);
+      segmentData.scatterData[ENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
+    } else {
+      segmentData.scatterData[DISENGAGED_INDEX].push(segmentInfo.meanChangeValue);
+      segmentData.scatterData[DISENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
+    }
+    segmentsChartsData.set(segmentName, segmentData);
+    updateScatterCharts(segmentName);
+  }
+
+  function updateBarCharts (segmentName) {
     let segmentChartData = segmentsChartsData.get(segmentName);
-    let loadData = generateChartDataObjectForSegment(segmentChartData.data);
-    segmentChartData.chart.load(loadData);
-    console.log(segmentName, segmentChartData.data);
+    let loadData = generateChartObjectForSegment(segmentChartData.distributionData).data;
+    segmentChartData.distributionChart.load(loadData);
+  }
+
+  function updateScatterCharts (segmentName) {
+    let scatterChartData = segmentsChartsData.get(segmentName);
+    let loadData = generateChartObjectForScatter(scatterChartData.scatterData).data;
+    console.log(scatterChartData.scatterData);
+    scatterChartData.scatterChart.load(loadData);
   }
 
   function calculatePercentage (value, total) {
@@ -115,13 +216,13 @@ import { UIProcessor } from './utils';
     Promise.all(requests)
       .then(function (responses) {
         if (firstRun) {
-          createDataArrayForSegmentsOfInterest();
+          createMetaDataMapForSegmentsOfInterest();
           firstRun = false;
         }
         let eventsTrace = new EventsTrace(responses[1].data);
         let performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
         performanceMeasuresTrace.segmentsInfo.forEach(function (segmentInfo) {
-          addUserTraceToData(segmentInfo.segment.action, segmentInfo.isEngaged);
+          addUserTraceToData(segmentInfo, performanceMeasuresTrace.data);
         });
         
         resetFileChoosers();
@@ -177,7 +278,6 @@ import { UIProcessor } from './utils';
     pmFileInput.setAttribute('disabled', true);
     userTraceFileInput.setAttribute('disabled', true);
     addTracesBtn.setAttribute('disabled', true);
-    updateLoadedFilesText('');
   }
 
   function resetFileChoosers () {
@@ -188,7 +288,6 @@ import { UIProcessor } from './utils';
     userTraceFileInput.value = '';
     pmCsvRequest = undefined;
     userTraceCsvRequest = undefined;
-    updateLoadedFilesText('');
   }
 
   function updateLoadedFilesText (text) {

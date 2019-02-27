@@ -2,6 +2,8 @@ import * as ss from 'simple-statistics'
 import { CsvProcessor, DateProcessor } from "./utils";
 import { pmLogsInfo } from './constants'
 
+const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
+
 class PerformanceMeasuresTrace {
 
   constructor(csv, segments) {
@@ -100,13 +102,14 @@ class PerformanceMeasuresTrace {
     return segments;
   }
 
-  addSegment(trendData, segment) {
-    let segmentFinalIndex = segment.finishIndex || trendData.length - 1;
-    let trendFunction = ss.linearRegressionLine(ss.linearRegression(trendData.slice(segment.initIndex, segmentFinalIndex + 1)));
-    let initTrendValue = trendFunction(trendData[segment.initIndex][0]);
-    let finishTrendValue = trendFunction(trendData[segmentFinalIndex][0]);
+  addSegment(relativeChangeData, segment) {
+    let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
+    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1);
+    let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
+    let initTrendValue = trendFunction(relativeChangeData[segment.initIndex][0]);
+    let finishTrendValue = trendFunction(relativeChangeData[segmentFinalIndex][0]);
     this.addTrendPointsToSegment(
-      trendData,
+      relativeChangeData,
       segment.initIndex,
       segmentFinalIndex,
       initTrendValue,
@@ -115,13 +118,22 @@ class PerformanceMeasuresTrace {
     
     let segmentInfo = {
       segment: segment,
-      isEngaged: this.isEngaged(initTrendValue, finishTrendValue)
+      isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
+      meanChangeValue: this.meanRelativePMChangeForSegmentData(segmentTrendData)
     } 
     this.segmentsInfo.push(segmentInfo);
   }
 
   isEngaged(initRelEngChange, finishRelEngChange) {
     return (finishRelEngChange - initRelEngChange) > 0;
+  }
+
+  meanRelativePMChangeForSegmentData (segmentTrendData) {
+    let changeValues = [];
+    segmentTrendData.forEach(function(trendData) {
+      changeValues.push( trendData[CHANGE_VAL_INDEX_IN_TREND_DATA])
+    });
+    return ss.mean(changeValues);
   }
 
   addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {    
