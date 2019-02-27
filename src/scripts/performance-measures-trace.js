@@ -1,6 +1,6 @@
-import * as ss from 'simple-statistics'
+import * as ss from 'simple-statistics';
 import { CsvProcessor, DateProcessor } from "./utils";
-import { pmLogsInfo } from './constants'
+import { pmLogsInfo } from './constants';
 
 const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
 
@@ -104,10 +104,17 @@ class PerformanceMeasuresTrace {
 
   addSegment(relativeChangeData, segment, pmId) {
     let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
-    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1);
+    let lastTime;
+    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1).map(function(data) {
+      let newData = [];
+      newData[0] = lastTime ? data[0] - lastTime : 0;
+      newData[1] = data[1];
+      lastTime = DateProcessor.millisecondsToSeconds(data[0]);
+      return newData;
+    });
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
-    let initTrendValue = trendFunction(relativeChangeData[segment.initIndex][0]);
-    let finishTrendValue = trendFunction(relativeChangeData[segmentFinalIndex][0]);
+    let initTrendValue = trendFunction(segmentTrendData[0][0]);
+    let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
     this.addTrendPointsToSegment(
       relativeChangeData,
       segment.initIndex,

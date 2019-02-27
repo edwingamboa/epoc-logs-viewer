@@ -159,6 +159,8 @@ import { UIProcessor } from './utils';
   function addUserTraceToData (segmentInfo) {
     let segmentName = segmentInfo.segment.action;
     if (segmentsChartsData.has(segmentName)) {
+      let segmentData = segmentsChartsData.get(segmentName);
+      segmentData.totalUsers += 1;
       updateBarChartsData(segmentInfo);
       updateScatterChartsData(segmentInfo);
     }
@@ -167,19 +169,17 @@ import { UIProcessor } from './utils';
   function updateBarChartsData (segmentInfo) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
-      segmentData.totalUsers += 1;
+    let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
+    segmentData.distributionData[dataIndex].count += 1;
 
-      let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
-      segmentData.distributionData[dataIndex].count += 1;
-
-      segmentData.distributionData[ENGAGED_INDEX].percentage = calculatePercentage(
-        segmentData.distributionData[ENGAGED_INDEX].count,
-        segmentData.totalUsers
-        );
-      segmentData.distributionData[DISENGAGED_INDEX].percentage = calculatePercentage(
-        segmentData.distributionData[DISENGAGED_INDEX].count,
-        segmentData.totalUsers
-        );
+    segmentData.distributionData[ENGAGED_INDEX].percentage = calculatePercentage(
+      segmentData.distributionData[ENGAGED_INDEX].count,
+      segmentData.totalUsers
+      );
+    segmentData.distributionData[DISENGAGED_INDEX].percentage = calculatePercentage(
+      segmentData.distributionData[DISENGAGED_INDEX].count,
+      segmentData.totalUsers
+      );
     segmentsChartsData.set(segmentName, segmentData);
     updateBarCharts(segmentName);
   }

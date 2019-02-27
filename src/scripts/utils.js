@@ -26,6 +26,10 @@ class DateProcessor {
   static dateBasedOnTimeStampMs (timestamp) {
     return new Date(parseFloat(timestamp) * 1000);
   }
+
+  static millisecondsToSeconds (milliseconds) {
+    return milliseconds / 1000;
+  }
 }
 
 class UIProcessor {
