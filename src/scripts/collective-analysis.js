@@ -40,8 +40,8 @@ import { UIProcessor } from './utils';
   }
 
   function createContainersForSegmentCharts(segmentName, barChartId, scatterChartId) {
-    createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution for ' + segmentName);
-    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants distribution for ' + segmentName)
+    createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
+    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants distribution mean ' + currentPm);
   }
 
   function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
@@ -79,14 +79,18 @@ import { UIProcessor } from './utils';
     let segmentChartsDiv = d3.select('#' + segmentName)
     if (segmentChartsDiv.empty()) {
       let mainContainer = d3.select('#' + constants.MAIN_CONTENT_DIV_ID)
+      mainContainer.append('h4')
+        .text(segmentName)
       segmentChartsDiv = mainContainer.append('div');
-      segmentChartsDiv.attr('id', segmentName);
+      segmentChartsDiv.attr('id', segmentName)
+        .attr('class', 'row');
     }
-    let chartContainer = segmentChartsDiv.append('div');
-    chartContainer.append('h4')
-    .text(title)
-    .append('div')
-    .attr('id', divId);
+    let chartContainer = segmentChartsDiv.append('div')
+      .attr('class', 'col-sm-6');
+    chartContainer.append('h5')
+      .text(title);
+    chartContainer.append('div')
+      .attr('id', divId);
   }
 
   function createChartForSegmentOfInterest (config) {
@@ -204,7 +208,6 @@ import { UIProcessor } from './utils';
   function updateScatterCharts (segmentName) {
     let scatterChartData = segmentsChartsData.get(segmentName);
     let loadData = generateChartObjectForScatter(scatterChartData.scatterData).data;
-    console.log(scatterChartData.scatterData);
     scatterChartData.scatterChart.load(loadData);
   }
 
