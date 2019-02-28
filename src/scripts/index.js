@@ -35,7 +35,7 @@ import { UIProcessor } from './utils';
 
         var userTraceEventsLines = parseUserTraceAsGridLines(eventsTrace.events);
         addChart(
-          performanceMeasuresTrace.data,
+          performanceMeasuresTrace.getData(true),
           constants.EPOC_MEASURES_CONTAINER_ID,
           userTraceEventsLines,
           addDetailsToUserTraceGridLines
@@ -43,7 +43,7 @@ import { UIProcessor } from './utils';
 
         var eventsOfInterestGridLines = parseUserTraceAsGridLines(eventsTrace.segments);
         trendsChart = addChart(
-          performanceMeasuresTrace.trendData,
+          performanceMeasuresTrace.getTrendData(true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines

@@ -61,8 +61,8 @@ export const linkEvents = [
 export const segmentsOfInterest = [
   'Link_Orientierung_xpage',
   'Link_Theorie_xpage',
-  // 'Link_Grundprinzip_xpage',
-  // 'Link_Berechnung_xpage',
+  'Link_Grundprinzip_xpage',
+  'Link_Berechnung_xpage',
   'Link_Raue_Oberflächen_xpage',
   'Link_Anwendung_xpage',
   'Link_FAQ_xpage',

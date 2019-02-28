@@ -14,7 +14,7 @@ class PerformanceMeasuresTrace {
     this.segmentsInfo = [];
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updatePerformanceMeasures(desiredPms);
-    this.updateTrendDate(segments);
+    this.updateTrendData(segments);
   }
 
   updateLogs(logs) {
@@ -22,11 +22,25 @@ class PerformanceMeasuresTrace {
   }
 
   updatePerformanceMeasures(desiredPms) {
-    this.data = this.extractScaPerformanceMeasures(desiredPms);
+    this.dataWithHeadings = this.extractScaPerformanceMeasures(desiredPms);
   }
 
-  updateTrendDate(segments) {
-    this.trendData = this.calculateTrendDataOfPm(segments);
+  updateTrendData(segments) {
+    this.trendDataWithHeadings = this.calculateTrendDataOfPm(segments);
+  }
+
+  getData (withHeadings) {
+    if (withHeadings) {
+      return this.dataWithHeadings;
+    }
+    return this.dataWithHeadings.slice(1);
+  }
+
+  getTrendData (withHeadings) {
+    if (withHeadings) {
+      return this.trendDataWithHeadings;
+    }
+    return this.trendDataWithHeadings.slice(1);
   }
 
   extractScaPerformanceMeasures (desiredPms) {
@@ -61,12 +75,12 @@ class PerformanceMeasuresTrace {
     const timeColumnIndex = pmLogsInfo.get('TimeStamp').initCol;
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
 
-    var initialPmVal = this.data[1][columnIndex];
+    var initialPmVal = this.getData()[0][columnIndex];
     var currentPmVal;
     var currentTime;
     var relEngChangeVals = [];
 
-    this.data.slice(1).forEach(function (pm) {
+    this.getData().forEach(function (pm) {
       currentTime = pm[timeColumnIndex];
       currentPmVal = pm[columnIndex];
       relEngChangeVals.push([
@@ -75,7 +89,7 @@ class PerformanceMeasuresTrace {
       ]);
     }.bind(this));
 
-    var segmentsWithIndexes = this.addIndexesToSegments(segments, this.data.slice(1), timeColumnIndex);
+    var segmentsWithIndexes = this.addIndexesToSegments(segments, this.getData(), timeColumnIndex);
     segmentsWithIndexes.forEach(function (segment) {
       if (segment.hasOwnProperty('initIndex')) {
         this.addSegment(relEngChangeVals, segment, pmId);
@@ -104,12 +118,14 @@ class PerformanceMeasuresTrace {
 
   addSegment(relativeChangeData, segment, pmId) {
     let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
-    let lastTime;
+    let initTime;
     let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1).map(function(data) {
+      if (!initTime) {
+        initTime = data[0];
+      }
       let newData = [];
-      newData[0] = lastTime ? data[0] - lastTime : 0;
+      newData[0] = DateProcessor.millisecondsToSeconds(data[0] - initTime);
       newData[1] = data[1];
-      lastTime = DateProcessor.millisecondsToSeconds(data[0]);
       return newData;
     });
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
@@ -129,7 +145,7 @@ class PerformanceMeasuresTrace {
       segment: segment,
       isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
       meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
-      meanPmValue : this.meanOfData(this.data.slice(segment.initIndex + 1, segmentFinalIndex + 2), columnIndex)
+      meanPmValue: this.meanOfData(this.getData().slice(segment.initIndex, segmentFinalIndex + 1), columnIndex)
     } 
     this.segmentsInfo.push(segmentInfo);
   }
@@ -137,6 +153,8 @@ class PerformanceMeasuresTrace {
   isEngaged(initRelEngChange, finishRelEngChange) {
     return (finishRelEngChange - initRelEngChange) > 0;
   }
+
+
 
   meanOfData (segmentData,valueIndex) {
     let values = [];
@@ -148,6 +166,61 @@ class PerformanceMeasuresTrace {
       values.push(value)
     });
     return ss.mean(values);
+  }
+
+  getJointSegmentsInfo (pmId) {
+    let jointSegmentsActions = [];
+    let jointSegmentsInfo = [];
+    this.segmentsInfo.forEach(function (segmentInfo, i) {
+      let segmentsToJoin = [ segmentInfo ];
+      let action = segmentInfo.segment.action;
+      this.segmentsInfo.forEach(function (segmentInfoToCompare, j) {
+        if (i !== j && segmentInfo.segment.action ===
+          segmentInfoToCompare.segment.action &&
+          jointSegmentsActions.indexOf(action) < 0) {
+          segmentsToJoin.push(segmentInfoToCompare);
+        }
+      });
+      if (segmentsToJoin.length > 1) {
+        jointSegmentsInfo.push(this.joinSegmentsInfo(segmentsToJoin, pmId));
+        jointSegmentsActions.push(action);
+      } else if (jointSegmentsActions.indexOf(action) < 0) {
+        jointSegmentsInfo.push(segmentInfo);
+      }
+    }.bind(this));
+    return jointSegmentsInfo;
+  }
+
+  joinSegmentsInfo (segmentsInfo, pmId) {
+    let segmentTrendData = [];
+    let segmentData = [];
+    let segmentFinalIndex;
+    let segment;
+    let jointSegmentsInfo = {};
+    segmentsInfo.forEach(function (segmentInfo) {
+      segment = segmentInfo.segment;
+      segmentFinalIndex = segment.finishIndex || this.getData.length - 1;
+      segmentTrendData = segmentTrendData.concat(this.getTrendData().slice(segment.initIndex, segmentFinalIndex + 1));
+      segmentData = segmentData.concat(this.getData().slice(segment.initIndex, segmentFinalIndex + 1));
+    }.bind(this));
+
+    // isEngaged property
+    let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
+    let initTrendValue = trendFunction(segmentTrendData[0][0]);
+    let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
+    jointSegmentsInfo.isEngaged = this.isEngaged(initTrendValue, finishTrendValue);
+    // meanPmValue property
+    const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
+    jointSegmentsInfo.meanPmValue = this.meanOfData(segmentData, columnIndex);
+    // meanChangeValue property
+    jointSegmentsInfo.meanChangeValue = this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
+    // segment property
+    jointSegmentsInfo.segment = {
+      action: segmentsInfo[0].segment.action,
+      details: segmentsInfo[0].segment.details
+    };
+
+    return jointSegmentsInfo;
   }
 
   addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {    

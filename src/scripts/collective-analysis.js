@@ -24,6 +24,7 @@ import { UIProcessor } from './utils';
   const DISENGAGED_INDEX = 1;
   const ENGAGED_X_INDEX = 2;
   const DISENGAGED_X_INDEX = 3;
+  var usersCounter = 0;
 
 
   function createMetaDataMapForSegmentsOfInterest () {
@@ -156,7 +157,7 @@ import { UIProcessor } from './utils';
     }
   }
 
-  function addUserTraceToData (segmentInfo) {
+  function addUserTraceToData (segmentInfo, userId) {
     let segmentName = segmentInfo.segment.action;
     if (segmentsChartsData.has(segmentName)) {
       let segmentData = segmentsChartsData.get(segmentName);
@@ -188,7 +189,7 @@ import { UIProcessor } from './utils';
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
 
-    if(segmentInfo.isEngaged) {
+    if (segmentInfo.isEngaged) {
       segmentData.scatterData[ENGAGED_INDEX].push(segmentInfo.meanPmValue);
       segmentData.scatterData[ENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
     } else {
@@ -224,10 +225,12 @@ import { UIProcessor } from './utils';
         }
         let eventsTrace = new EventsTrace(responses[1].data);
         let performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
-        performanceMeasuresTrace.segmentsInfo.forEach(function (segmentInfo) {
-          addUserTraceToData(segmentInfo, performanceMeasuresTrace.data);
+        usersCounter++;
+        let userId = 'user' + usersCounter;
+        console.log(performanceMeasuresTrace.getJointSegmentsInfo(currentPm));
+        performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
+          addUserTraceToData(segmentInfo, userId);
         });
-        
         resetFileChoosers();
         appendTextToFilesText(responses[0].filename + ', ' + responses[1].filename + '; ');
         UIProcessor.switchToMainContent();
