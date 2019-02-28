@@ -55,7 +55,8 @@ export const linkEvents = [
   'Link_FAQ_xpage',
   'Link_Zusammenfassung_xpage',
   'Link_Wiederholungsfragen_xpage',
-  'Link_Quellen_xpage'
+  'Link_Quellen_xpage',
+  'Link_Instruktion_xpage'
 ];
 
 export const segmentsOfInterest = [
@@ -68,5 +69,6 @@ export const segmentsOfInterest = [
   'Link_FAQ_xpage',
   'Link_Zusammenfassung_xpage',
   'Link_Wiederholungsfragen_xpage',
-  'Link_Quellen_xpage'
+  'Link_Quellen_xpage',
+  'Link_Instruktion_xpage'
 ];
