@@ -69,6 +69,7 @@ class EventsTrace {
     var currentSegmentInitTime;
     this.logs.forEach(function (line, index) {
       if (line !== '' && index > 0) {
+        line = line.replace(/\r?\n|\r/, '');
         var columns = CsvProcessor.getColumnsOfCsvLine(line, ';');
         if (eventsOfInterest.indexOf(columns[columnOfEvent]) > -1) {
           currentSegmentInitTime = new Date(columns[columnOfTime]);
