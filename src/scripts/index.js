@@ -1,3 +1,5 @@
+/* global FileReader */
+
 import '../styles/main_style.css';
 import '../styles/bootstrap.min.css';
 import 'c3/c3.css';

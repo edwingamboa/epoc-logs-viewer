@@ -1,3 +1,4 @@
+/* global FileReader */
 import '../styles/main_style.css';
 import '../styles/bootstrap.min.css';
 import EventsTrace from './events-trace';
@@ -7,8 +8,6 @@ import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
 import { UIProcessor } from './utils';
-
-
 
 (function () {
   var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
@@ -26,27 +25,26 @@ import { UIProcessor } from './utils';
   const DISENGAGED_X_INDEX = 3;
   var usersCounter = 0;
 
-
   function createMetaDataMapForSegmentsOfInterest () {
     constants.segmentsOfInterest.forEach(function (segmentName) {
       let barChartId = segmentName + 'distributionChart';
       let scatterChartId = segmentName + 'meanEngChart';
-      
+
       createContainersForSegmentCharts(segmentName, barChartId, scatterChartId);
-      
+
       let barChartData = generateInitialBarChartData();
       let scatterColumns = generateInitialScatterData();
       segmentsChartsData.set(segmentName, generateSegmentChartsData(barChartData, barChartId, scatterColumns, scatterChartId));
     });
   }
 
-  function createContainersForSegmentCharts(segmentName, barChartId, scatterChartId) {
+  function createContainersForSegmentCharts (segmentName, barChartId, scatterChartId) {
     createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
     createContainerForSegmentChart(segmentName, scatterChartId, 'Participants\' mean ' + currentPm);
   }
 
   function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
-    let segmentChartsData = { 
+    let segmentChartsData = {
       distributionData: barChartData,
       distributionChart: createChartForSegmentOfInterest(
         generateChartObjectForSegment(barChartData, barChartId)
@@ -55,7 +53,7 @@ import { UIProcessor } from './utils';
       scatterData: scatterColumns,
       scatterChart: createChartForSegmentOfInterest(
         generateChartObjectForScatter(scatterColumns, scatterChartId)
-      ),
+      )
     };
     return segmentChartsData;
   }
@@ -68,20 +66,20 @@ import { UIProcessor } from './utils';
     scatterColumns[DISENGAGED_X_INDEX] = [ 'disengaged_x' ];
     return scatterColumns;
   }
-  
+
   function generateInitialBarChartData () {
     let barChartData = [];
-    barChartData[ENGAGED_INDEX] = { name: 'engaged', percentage: 0, count: 0};
-    barChartData[DISENGAGED_INDEX] = { name: 'disengaged', percentage: 0, count: 0};
+    barChartData[ENGAGED_INDEX] = { name: 'engaged', percentage: 0, count: 0 };
+    barChartData[DISENGAGED_INDEX] = { name: 'disengaged', percentage: 0, count: 0 };
     return barChartData;
-  } 
+  }
 
   function createContainerForSegmentChart (segmentName, divId, title) {
-    let segmentChartsDiv = d3.select('#' + segmentName)
+    let segmentChartsDiv = d3.select('#' + segmentName);
     if (segmentChartsDiv.empty()) {
-      let mainContainer = d3.select('#' + constants.MAIN_CONTENT_DIV_ID)
+      let mainContainer = d3.select('#' + constants.MAIN_CONTENT_DIV_ID);
       mainContainer.append('h4')
-        .text(segmentName)
+        .text(segmentName);
       segmentChartsDiv = mainContainer.append('div');
       segmentChartsDiv.attr('id', segmentName)
         .attr('class', 'row');
@@ -95,12 +93,12 @@ import { UIProcessor } from './utils';
   }
 
   function createChartForSegmentOfInterest (config) {
-    return c3.generate(config)
+    return c3.generate(config);
   }
 
   function generateChartObjectForSegment (segmentData, divId) {
     return {
-      data: { 
+      data: {
         json: segmentData,
         keys: {
           x: 'name',
@@ -108,7 +106,7 @@ import { UIProcessor } from './utils';
         },
         type: 'bar',
         labels: {
-          format: function (v) { return v + '%' }
+          format: function (v) { return v + '%'; }
         }
       },
       axis: {
@@ -125,19 +123,19 @@ import { UIProcessor } from './utils';
       },
       bindto: '#' + divId,
       legend: {
-          show: false
+        show: false
       }
-    }    
+    };
   }
 
   function generateChartObjectForScatter (segmentData, divId) {
     return {
-      data: { 
+      data: {
         columns: segmentData,
         type: 'scatter',
         xs: {
           engaged: 'engaged_x',
-          disengaged: 'disengaged_x',
+          disengaged: 'disengaged_x'
         }
       },
       axis: {
@@ -153,8 +151,8 @@ import { UIProcessor } from './utils';
           min: -1
         }
       },
-      bindto: '#' + divId,
-    }
+      bindto: '#' + divId
+    };
   }
 
   function addUserTraceToData (segmentInfo, userId) {
@@ -176,11 +174,11 @@ import { UIProcessor } from './utils';
     segmentData.distributionData[ENGAGED_INDEX].percentage = calculatePercentage(
       segmentData.distributionData[ENGAGED_INDEX].count,
       segmentData.totalUsers
-      );
+    );
     segmentData.distributionData[DISENGAGED_INDEX].percentage = calculatePercentage(
       segmentData.distributionData[DISENGAGED_INDEX].count,
       segmentData.totalUsers
-      );
+    );
     segmentsChartsData.set(segmentName, segmentData);
     updateBarCharts(segmentName);
   }
@@ -248,7 +246,7 @@ import { UIProcessor } from './utils';
     handleFileLoading(e.target.files[0], 'ut');
   });
 
-  addTracesBtn.addEventListener('click', function(e) {
+  addTracesBtn.addEventListener('click', function (e) {
     if (pmCsvRequest && userTraceCsvRequest) {
       disableFileChoosers();
       addUserTraces([pmCsvRequest, userTraceCsvRequest]);
@@ -294,10 +292,6 @@ import { UIProcessor } from './utils';
     userTraceFileInput.value = '';
     pmCsvRequest = undefined;
     userTraceCsvRequest = undefined;
-  }
-
-  function updateLoadedFilesText (text) {
-    loadedFilesTextElement.innerHTML = text;
   }
 
   function appendTextToFilesText (text) {

@@ -1,31 +1,30 @@
 import * as ss from 'simple-statistics';
-import { CsvProcessor, DateProcessor } from "./utils";
+import { CsvProcessor, DateProcessor } from './utils';
 import { pmLogsInfo } from './constants';
 
 const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
 
 class PerformanceMeasuresTrace {
-
-  constructor(csv, segments) {
+  constructor (csv, segments) {
     this.update(csv, segments);
   }
 
-  update(csv, segments, desiredPms) {
+  update (csv, segments, desiredPms) {
     this.segmentsInfo = [];
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updatePerformanceMeasures(desiredPms);
     this.updateTrendData(segments);
   }
 
-  updateLogs(logs) {
+  updateLogs (logs) {
     this.logs = logs;
   }
 
-  updatePerformanceMeasures(desiredPms) {
+  updatePerformanceMeasures (desiredPms) {
     this.dataWithHeadings = this.extractScaPerformanceMeasures(desiredPms);
   }
 
-  updateTrendData(segments) {
+  updateTrendData (segments) {
     this.trendDataWithHeadings = this.calculateTrendDataOfPm(segments);
   }
 
@@ -116,10 +115,10 @@ class PerformanceMeasuresTrace {
     return segments;
   }
 
-  addSegment(relativeChangeData, segment, pmId) {
+  addSegment (relativeChangeData, segment, pmId) {
     let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
     let initTime;
-    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1).map(function(data) {
+    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1).map(function (data) {
       if (!initTime) {
         initTime = data[0];
       }
@@ -140,30 +139,28 @@ class PerformanceMeasuresTrace {
     );
 
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
-    
+
     let segmentInfo = {
       segment: segment,
       isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
       meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
       meanPmValue: this.meanOfData(this.getData().slice(segment.initIndex, segmentFinalIndex + 1), columnIndex)
-    } 
+    };
     this.segmentsInfo.push(segmentInfo);
   }
 
-  isEngaged(initRelEngChange, finishRelEngChange) {
+  isEngaged (initRelEngChange, finishRelEngChange) {
     return (finishRelEngChange - initRelEngChange) > 0;
   }
 
-
-
-  meanOfData (segmentData,valueIndex) {
+  meanOfData (segmentData, valueIndex) {
     let values = [];
-    segmentData.forEach(function(data) {
+    segmentData.forEach(function (data) {
       let value = data[valueIndex];
       if (typeof value === 'string') {
         value = parseFloat(value);
       }
-      values.push(value)
+      values.push(value);
     });
     return ss.mean(values);
   }
@@ -223,7 +220,7 @@ class PerformanceMeasuresTrace {
     return jointSegmentsInfo;
   }
 
-  addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {    
+  addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {
     trendData[segmentInitIndex][2] = initTrendValue;
     trendData[segmentFinalIndex][2] = finishTrendValue;
   }
