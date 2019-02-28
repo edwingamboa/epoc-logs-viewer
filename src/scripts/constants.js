@@ -2,6 +2,7 @@ export const EPOC_MEASURES_CONTAINER_ID = 'measuresViewer';
 export const TRENDS_VIEWER_CONTAINER_ID = 'trendsViewer';
 export const PM_FILE_INPUT_ID = 'pmFileUrl';
 export const UT_FILE_INPUT_ID = 'userTraceFileUrl';
+export const LOGS_FILE_INPUT_ID = 'logsUrl';
 export const LOADED_FILES_TEXT_ID = 'loadedFilesText';
 export const TREND_CHART_R_BTNS_DIV_ID = 'trendChartPmRBtnsDiv';
 export const DEFAULT_TREND_CHART_PM_ID = 'SCA_ENG';

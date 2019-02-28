@@ -10,13 +10,10 @@ import * as constants from './constants';
 import { UIProcessor } from './utils';
 
 (function () {
-  var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
-  var userTraceFileInput = document.querySelector('#' + constants.UT_FILE_INPUT_ID);
+  var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
   var loadedFilesTextElement = document.querySelector('#' + constants.LOADED_FILES_TEXT_ID);
-  var addTracesBtn = document.querySelector('#' + constants.ADD_FILE_BUTTON_ID);
   var firstRun = true;
-  var pmCsvRequest;
-  var userTraceCsvRequest;
+  var logsRequests = [];
   var currentPm = 'SCA_ENG';
   var segmentsChartsData = new Map();
   const ENGAGED_INDEX = 0;
@@ -217,6 +214,8 @@ import { UIProcessor } from './utils';
   function addUserTraces (requests) {
     Promise.all(requests)
       .then(function (responses) {
+        console.log(responses);
+        return;
         if (firstRun) {
           createMetaDataMapForSegmentsOfInterest();
           firstRun = false;
@@ -238,28 +237,17 @@ import { UIProcessor } from './utils';
       });
   }
 
-  pmFileInput.addEventListener('change', function (e) {
-    handleFileLoading(e.target.files[0], 'pm');
+  filesInput.addEventListener('change', function (e) {
+    handleFilesLoading(e.target.files);
+    disableFileChoosers();
+    UIProcessor.switchToProgressSpinner();
   });
 
-  userTraceFileInput.addEventListener('change', function (e) {
-    handleFileLoading(e.target.files[0], 'ut');
-  });
-
-  addTracesBtn.addEventListener('click', function (e) {
-    if (pmCsvRequest && userTraceCsvRequest) {
-      disableFileChoosers();
-      addUserTraces([pmCsvRequest, userTraceCsvRequest]);
-      UIProcessor.switchToProgressSpinner();
-    }
-  });
-
-  function handleFileLoading (file, id) {
-    if (id === 'pm') {
-      pmCsvRequest = readSingleFile(file);
-    } else {
-      userTraceCsvRequest = readSingleFile(file);
-    }
+  function handleFilesLoading (files) {
+    for (var i = 0; i < files.length; i++) {
+      logsRequests.push(readSingleFile(files.item(0)));
+    };
+    addUserTraces(logsRequests);
   }
 
   function readSingleFile (file) {
@@ -279,19 +267,13 @@ import { UIProcessor } from './utils';
   }
 
   function disableFileChoosers () {
-    pmFileInput.setAttribute('disabled', true);
-    userTraceFileInput.setAttribute('disabled', true);
-    addTracesBtn.setAttribute('disabled', true);
+    filesInput.setAttribute('disabled', true);
   }
 
   function resetFileChoosers () {
-    pmFileInput.removeAttribute('disabled');
-    userTraceFileInput.removeAttribute('disabled');
-    addTracesBtn.removeAttribute('disabled');
-    pmFileInput.value = '';
-    userTraceFileInput.value = '';
-    pmCsvRequest = undefined;
-    userTraceCsvRequest = undefined;
+    filesInput.removeAttribute('disabled');
+    filesInput.value = '';
+    logsRequests = [];
   }
 
   function appendTextToFilesText (text) {
