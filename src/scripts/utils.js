@@ -20,9 +20,9 @@ class DateProcessor {
   }
 
   static elapsedMinutes (initTime, finishTime) {
-    return elapsedSeconds(initTime, finishTime) / 60;
+    return this.elapsedSeconds(initTime, finishTime) / 60;
   }
-  
+
   static dateBasedOnTimeStampMs (timestamp) {
     return new Date(parseFloat(timestamp) * 1000);
   }

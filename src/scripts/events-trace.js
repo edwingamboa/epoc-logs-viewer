@@ -1,5 +1,5 @@
 import { CsvProcessor, DateProcessor } from './utils';
-import { linkEvents } from './constants'
+import { linkEvents } from './constants';
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -19,25 +19,25 @@ const traceLogsInfo = new Map([
 const DEFAULT_SEGMENT_DISTANCE = 50;
 
 class EventsTrace {
-  constructor(csv) {
+  constructor (csv) {
     this.update(csv);
   }
 
-  update(csv, segmentDistance) {
+  update (csv, segmentDistance) {
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updateEvents();
     this.updateSegments(segmentDistance);
   }
 
-  updateLogs(logs) {
+  updateLogs (logs) {
     this.logs = logs;
   }
 
-  updateEvents() {
+  updateEvents () {
     this.events = this.extractUserTraceEvents(this.logs);
   }
 
-  updateSegments(segmentDistance) {
+  updateSegments (segmentDistance) {
     this.segments = this.extractSegmentsFromEvents(
       traceLogsInfo.get('actionD1').values.link,
       traceLogsInfo.get('timestamp').initCol,
@@ -46,7 +46,7 @@ class EventsTrace {
     );
   }
 
-  extractUserTraceEvents(logs) {
+  extractUserTraceEvents (logs) {
     let events = [];
     logs.forEach(function (line, index) {
       if (line !== '' && index > 0) {
@@ -97,7 +97,7 @@ class EventsTrace {
 }
 
 class Event {
-  constructor(time, action, details) {
+  constructor (time, action, details) {
     this.time = time;
     this.action = action;
     this.details = details;
