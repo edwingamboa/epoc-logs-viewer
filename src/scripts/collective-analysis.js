@@ -94,6 +94,7 @@ import { UIProcessor, NumberProcessor } from './utils';
   }
 
   function generateChartObjectForSegment (segmentData, divId) {
+    var colors = ['#3574B2', '#F77F21'];
     return {
       data: {
         json: segmentData,
@@ -104,6 +105,9 @@ import { UIProcessor, NumberProcessor } from './utils';
         type: 'bar',
         labels: {
           format: function (v) { return v + '%'; }
+        },
+        color: function (color, d) {
+          return colors[d.index];
         }
       },
       axis: {
