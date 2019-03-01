@@ -235,7 +235,6 @@ import { UIProcessor } from './utils';
         eventsTracesData.forEach(function (data, userId) {
           eventsTrace = new EventsTrace(data);
           performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
-          usersCounter++;
           performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
             addUserTraceToData(segmentInfo, userId);
           });
