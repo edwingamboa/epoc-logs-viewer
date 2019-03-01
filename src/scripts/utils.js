@@ -48,4 +48,18 @@ class UIProcessor {
   }
 }
 
-export { CsvProcessor, DateProcessor, UIProcessor };
+class NumberProcessor {
+  static calculatePercentage (value, total) {
+    return (value / total) * 100;
+  }
+
+  static round (value, decimals) {
+    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+  }
+
+  static calculateRoundedPercentage (value, total, decimals) {
+    return this.round(this.calculatePercentage(value, total), decimals);
+  }
+}
+
+export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor };

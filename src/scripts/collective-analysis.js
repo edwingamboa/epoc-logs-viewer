@@ -7,7 +7,7 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
-import { UIProcessor } from './utils';
+import { UIProcessor, NumberProcessor } from './utils';
 
 (function () {
   var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
@@ -168,13 +168,15 @@ import { UIProcessor } from './utils';
     let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
 
-    segmentData.distributionData[ENGAGED_INDEX].percentage = calculatePercentage(
+    segmentData.distributionData[ENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[ENGAGED_INDEX].count,
-      segmentData.totalUsers
+      segmentData.totalUsers,
+      2
     );
-    segmentData.distributionData[DISENGAGED_INDEX].percentage = calculatePercentage(
+    segmentData.distributionData[DISENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[DISENGAGED_INDEX].count,
-      segmentData.totalUsers
+      segmentData.totalUsers,
+      2
     );
     segmentsChartsData.set(segmentName, segmentData);
   }
@@ -210,10 +212,6 @@ import { UIProcessor } from './utils';
       updateBarCharts(segmentName);
       updateScatterCharts(segmentName);
     });
-  }
-
-  function calculatePercentage (value, total) {
-    return (value / total) * 100;
   }
 
   function addUserTraces (requests) {
