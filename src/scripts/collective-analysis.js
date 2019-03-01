@@ -11,18 +11,18 @@ import { UIProcessor } from './utils';
 
 (function () {
   var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
-  var loadedFilesTextElement = document.querySelector('#' + constants.LOADED_FILES_TEXT_ID);
-  var firstRun = true;
-  var logsRequests = [];
+  var performanceMeasuresData;
+  var eventsTracesData;
   var currentPm = 'SCA_ENG';
-  var segmentsChartsData = new Map();
+  var segmentsChartsData;
   const ENGAGED_INDEX = 0;
   const DISENGAGED_INDEX = 1;
   const ENGAGED_X_INDEX = 2;
   const DISENGAGED_X_INDEX = 3;
-  var usersCounter = 0;
+  const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
 
   function createMetaDataMapForSegmentsOfInterest () {
+    segmentsChartsData = new Map();
     constants.segmentsOfInterest.forEach(function (segmentName) {
       let barChartId = segmentName + 'distributionChart';
       let scatterChartId = segmentName + 'meanEngChart';
@@ -177,7 +177,6 @@ import { UIProcessor } from './utils';
       segmentData.totalUsers
     );
     segmentsChartsData.set(segmentName, segmentData);
-    updateBarCharts(segmentName);
   }
 
   function updateScatterChartsData (segmentInfo) {
@@ -192,7 +191,6 @@ import { UIProcessor } from './utils';
       segmentData.scatterData[DISENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
     }
     segmentsChartsData.set(segmentName, segmentData);
-    updateScatterCharts(segmentName);
   }
 
   function updateBarCharts (segmentName) {
@@ -207,6 +205,13 @@ import { UIProcessor } from './utils';
     scatterChartData.scatterChart.load(loadData);
   }
 
+  function updateAllCharts () {
+    constants.segmentsOfInterest.forEach(function (segmentName) {
+      updateBarCharts(segmentName);
+      updateScatterCharts(segmentName);
+    });
+  }
+
   function calculatePercentage (value, total) {
     return (value / total) * 100;
   }
@@ -214,27 +219,43 @@ import { UIProcessor } from './utils';
   function addUserTraces (requests) {
     Promise.all(requests)
       .then(function (responses) {
-        console.log(responses);
-        return;
-        if (firstRun) {
-          createMetaDataMapForSegmentsOfInterest();
-          firstRun = false;
-        }
-        let eventsTrace = new EventsTrace(responses[1].data);
-        let performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
-        usersCounter++;
-        let userId = 'user' + usersCounter;
-        console.log(performanceMeasuresTrace.getJointSegmentsInfo(currentPm));
-        performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
-          addUserTraceToData(segmentInfo, userId);
+        createMetaDataMapForSegmentsOfInterest();
+        performanceMeasuresData = new Map();
+        eventsTracesData = new Map();
+        responses.forEach(function (response) {
+          if (response.fileNameData.typeOfTrace === TRACE_TYPES.pm) {
+            performanceMeasuresData.set(response.fileNameData.userId, response.data);
+          } else {
+            eventsTracesData.set(response.fileNameData.userId, response.data);
+          }
         });
+
+        let eventsTrace;
+        let performanceMeasuresTrace;
+        eventsTracesData.forEach(function (data, userId) {
+          eventsTrace = new EventsTrace(data);
+          performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
+          usersCounter++;
+          performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
+            addUserTraceToData(segmentInfo, userId);
+          });
+        });
+        updateAllCharts();
         resetFileChoosers();
-        appendTextToFilesText(responses[0].filename + ', ' + responses[1].filename + '; ');
         UIProcessor.switchToMainContent();
       })
       .catch(function (error) {
         console.error(error);
       });
+  }
+
+  function extractDataOfFileName (fileName) {
+    let data = {};
+    data.fileId = fileName.substring(0, fileName.indexOf('.csv'));
+    let fileData = data.fileId.split('_');
+    data.typeOfTrace = fileData[0];
+    data.userId = fileData[1];
+    return data;
   }
 
   filesInput.addEventListener('change', function (e) {
@@ -244,10 +265,15 @@ import { UIProcessor } from './utils';
   });
 
   function handleFilesLoading (files) {
-    for (var i = 0; i < files.length; i++) {
-      logsRequests.push(readSingleFile(files.item(0)));
+    let requests = [];
+    let file;
+    let request;
+    for (let i = 0; i < files.length; i++) {
+      file = files.item(i);
+      request = readSingleFile(file);
+      requests.push(request);
     };
-    addUserTraces(logsRequests);
+    addUserTraces(requests);
   }
 
   function readSingleFile (file) {
@@ -259,7 +285,7 @@ import { UIProcessor } from './utils';
       reader.onload = function (e) {
         resolve({
           data: e.target.result,
-          filename: file.name
+          fileNameData: extractDataOfFileName(file.name)
         });
       };
       reader.readAsText(file);
@@ -273,10 +299,6 @@ import { UIProcessor } from './utils';
   function resetFileChoosers () {
     filesInput.removeAttribute('disabled');
     filesInput.value = '';
-    logsRequests = [];
-  }
-
-  function appendTextToFilesText (text) {
-    loadedFilesTextElement.innerHTML += text;
+    performanceMeasuresData = [];
   }
 }());
