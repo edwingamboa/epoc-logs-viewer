@@ -137,7 +137,11 @@ import { UIProcessor, NumberProcessor } from './utils';
       },
       axis: {
         x: {
-          type: 'category'
+          type: 'category',
+          tick: {
+            rotate: 90,
+            multiline: false
+          }
         },
         y: {
           label: {
