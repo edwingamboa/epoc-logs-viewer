@@ -166,7 +166,7 @@ import { UIProcessor, NumberProcessor } from './utils';
       let segmentData = segmentsChartsData.get(segmentName);
       segmentData.totalUsers += 1;
       updateBarChartsData(segmentInfo);
-      updateScatterChartsData(segmentInfo);
+      updateScatterChartsData(segmentInfo, userId);
     }
   }
 
@@ -189,17 +189,14 @@ import { UIProcessor, NumberProcessor } from './utils';
     segmentsChartsData.set(segmentName, segmentData);
   }
 
-  function updateScatterChartsData (segmentInfo) {
+  function updateScatterChartsData (segmentInfo, userId) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
+    let pmValueIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
+    let userIdIndex = segmentInfo.isEngaged ? ENGAGED_X_INDEX : DISENGAGED_X_INDEX;
 
-    if (segmentInfo.isEngaged) {
-      segmentData.scatterData[ENGAGED_INDEX].push(segmentInfo.meanPmValue);
-      segmentData.scatterData[ENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
-    } else {
-      segmentData.scatterData[DISENGAGED_INDEX].push(segmentInfo.meanPmValue);
-      segmentData.scatterData[DISENGAGED_X_INDEX].push('user' + segmentData.totalUsers);
-    }
+    segmentData.scatterData[pmValueIndex].push(segmentInfo.meanPmValue);
+    segmentData.scatterData[userIdIndex].push(userId);
     segmentsChartsData.set(segmentName, segmentData);
   }
 
