@@ -7,7 +7,7 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
-import { UIProcessor, NumberProcessor } from './utils';
+import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
 (function () {
   var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
@@ -17,8 +17,6 @@ import { UIProcessor, NumberProcessor } from './utils';
   var segmentsChartsData;
   const ENGAGED_INDEX = 0;
   const DISENGAGED_INDEX = 1;
-  const ENGAGED_X_INDEX = 2;
-  const DISENGAGED_X_INDEX = 3;
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
 
   function createMetaDataMapForSegmentsOfInterest () {
@@ -30,7 +28,7 @@ import { UIProcessor, NumberProcessor } from './utils';
       createContainersForSegmentCharts(segmentName, barChartId, scatterChartId);
 
       let barChartData = generateInitialBarChartData();
-      let scatterColumns = generateInitialScatterData();
+      let scatterColumns = [];
       segmentsChartsData.set(segmentName, generateSegmentChartsData(barChartData, barChartId, scatterColumns, scatterChartId));
     });
   }
@@ -53,15 +51,6 @@ import { UIProcessor, NumberProcessor } from './utils';
       )
     };
     return segmentChartsData;
-  }
-
-  function generateInitialScatterData () {
-    let scatterColumns = [];
-    scatterColumns[ENGAGED_INDEX] = [ 'engaged' ];
-    scatterColumns[DISENGAGED_INDEX] = [ 'disengaged' ];
-    scatterColumns[ENGAGED_X_INDEX] = [ 'engaged_x' ];
-    scatterColumns[DISENGAGED_X_INDEX] = [ 'disengaged_x' ];
-    return scatterColumns;
   }
 
   function generateInitialBarChartData () {
@@ -132,12 +121,13 @@ import { UIProcessor, NumberProcessor } from './utils';
   function generateChartObjectForScatter (segmentData, divId) {
     return {
       data: {
-        columns: segmentData,
+        json: segmentData,
         type: 'scatter',
-        xs: {
-          engaged: 'engaged_x',
-          disengaged: 'disengaged_x'
-        }
+        keys: {
+          x: 'userId',
+          value: ['engaged', 'disengaged']
+        },
+        xSort: false
       },
       axis: {
         x: {
@@ -156,8 +146,49 @@ import { UIProcessor, NumberProcessor } from './utils';
           min: -1
         }
       },
-      bindto: '#' + divId
+      bindto: '#' + divId,
+      tooltip: {
+        contents: function (d) {
+          return generateUserTooltipInfoHTMLCode(segmentData[d[0].index]);
+        }
+      }
     };
+  }
+
+  function generateUserTooltipInfoHTMLCode (userData) {
+    let tooltipDiv = d3.select(document.createElement('div'));
+    let tooltipTableBody = tooltipDiv
+      .attr('class', 'c3-tooltip-container')
+      .append('table')
+      .attr('class', 'c3-tooltip')
+      .append('tbody');
+    tooltipTableBody
+      .append('tr')
+      .append('th')
+      .attr('colspan', 2)
+      .text(userData.userId);
+
+    const numberOfDecimals = 5;
+    const rowData = [
+      { label: 'Engaged', value: userData.segmentInfo.isEngaged ? 'Yes' : 'No' },
+      { label: 'Mean ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.meanPmValue, numberOfDecimals) },
+      { label: 'Max ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.maxPmValue, numberOfDecimals) },
+      { label: 'Min ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.minPmValue, numberOfDecimals) },
+      { label: 'Spent time (HH:MM:SS)', value: DateProcessor.secondsToHHMMSS(userData.segmentInfo.spentTime) }
+    ];
+
+    let rowContent;
+    rowData.forEach(function (row) {
+      rowContent = tooltipTableBody
+        .append('tr');
+      rowContent
+        .append('td')
+        .text(row.label);
+      rowContent
+        .append('td')
+        .text(row.value);
+    });
+    return tooltipDiv.html();
   }
 
   function addUserTraceToData (segmentInfo, userId) {
@@ -176,15 +207,16 @@ import { UIProcessor, NumberProcessor } from './utils';
     let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
 
+    const numberOfDecimals = 2;
     segmentData.distributionData[ENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[ENGAGED_INDEX].count,
       segmentData.totalUsers,
-      2
+      numberOfDecimals
     );
     segmentData.distributionData[DISENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[DISENGAGED_INDEX].count,
       segmentData.totalUsers,
-      2
+      numberOfDecimals
     );
     segmentsChartsData.set(segmentName, segmentData);
   }
@@ -192,11 +224,15 @@ import { UIProcessor, NumberProcessor } from './utils';
   function updateScatterChartsData (segmentInfo, userId) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
-    let pmValueIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
-    let userIdIndex = segmentInfo.isEngaged ? ENGAGED_X_INDEX : DISENGAGED_X_INDEX;
-
-    segmentData.scatterData[pmValueIndex].push(segmentInfo.meanPmValue);
-    segmentData.scatterData[userIdIndex].push(userId);
+    let userData = {};
+    userData.userId = userId;
+    userData.segmentInfo = segmentInfo;
+    if (segmentInfo.isEngaged) {
+      userData.engaged = segmentInfo.meanPmValue;
+    } else {
+      userData.disengaged = segmentInfo.meanPmValue;
+    }
+    segmentData.scatterData.push(userData);
     segmentsChartsData.set(segmentName, segmentData);
   }
 

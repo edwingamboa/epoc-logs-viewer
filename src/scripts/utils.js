@@ -1,4 +1,5 @@
 import * as constants from './constants';
+import { min } from 'simple-statistics';
 
 class CsvProcessor {
   static extractLines (csv) {
@@ -12,7 +13,7 @@ class CsvProcessor {
 
 class DateProcessor {
   static extractTimeHHMMSS (date) {
-    return date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+    return this.formatHHMMSS(date.getHours(), date.getMinutes(), date.getSeconds());
   }
 
   static elapsedSeconds (initTime, finishTime) {
@@ -29,6 +30,27 @@ class DateProcessor {
 
   static millisecondsToSeconds (milliseconds) {
     return milliseconds / 1000;
+  }
+
+  static secondsToHHMMSS (time) {
+    let hours = Math.floor(time / 3600);
+    time = time - hours * 3600;
+    let minutes = Math.floor(time / 60);
+    let seconds = time % 60;
+    return this.formatHHMMSS(hours, minutes, seconds);
+  }
+
+  static formatHHMMSS (hours, minutes, seconds) {
+    let timeWithLeadingZeros = [hours, minutes, seconds].map(function (time) {
+      return this.addLeadingZeros(time);
+    }.bind(this));
+    return timeWithLeadingZeros.join(':');
+  }
+
+  static addLeadingZeros (string) {
+    const length = 2;
+    const pad = '0';
+    return (new Array(length + 1).join(pad) + string).slice(-length);
   }
 }
 

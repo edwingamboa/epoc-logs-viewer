@@ -140,11 +140,16 @@ class PerformanceMeasuresTrace {
 
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
 
+    let segmentData = this.getData().slice(segment.initIndex, segmentFinalIndex + 1);
+
     let segmentInfo = {
       segment: segment,
       isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
       meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
-      meanPmValue: this.meanOfData(this.getData().slice(segment.initIndex, segmentFinalIndex + 1), columnIndex)
+      meanPmValue: this.meanOfData(segmentData, columnIndex),
+      maxPmValue: this.maxOfData(segmentData, columnIndex),
+      minPmValue: this.minOfData(segmentData, columnIndex),
+      spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime)
     };
     this.segmentsInfo.push(segmentInfo);
   }
@@ -154,15 +159,27 @@ class PerformanceMeasuresTrace {
   }
 
   meanOfData (segmentData, valueIndex) {
+    return ss.mean(this.getColumnOfData(segmentData, valueIndex));
+  }
+
+  maxOfData (segmentData, valueIndex) {
+    return ss.max(this.getColumnOfData(segmentData, valueIndex));
+  }
+
+  minOfData (segmentData, valueIndex) {
+    return ss.min(this.getColumnOfData(segmentData, valueIndex));
+  }
+
+  getColumnOfData (data, columnIndex) {
     let values = [];
-    segmentData.forEach(function (data) {
-      let value = data[valueIndex];
+    data.forEach(function (data) {
+      let value = data[columnIndex];
       if (typeof value === 'string') {
         value = parseFloat(value);
       }
       values.push(value);
     });
-    return ss.mean(values);
+    return values;
   }
 
   getJointSegmentsInfo (pmId) {
@@ -194,11 +211,21 @@ class PerformanceMeasuresTrace {
     let segmentFinalIndex;
     let segment;
     let jointSegmentsInfo = {};
+    let maxPmValue = 0;
+    let minPmValue = 0;
+    let spentTime = 0;
     segmentsInfo.forEach(function (segmentInfo) {
       segment = segmentInfo.segment;
       segmentFinalIndex = segment.finishIndex || this.getData.length - 1;
       segmentTrendData = segmentTrendData.concat(this.getTrendData().slice(segment.initIndex, segmentFinalIndex + 1));
       segmentData = segmentData.concat(this.getData().slice(segment.initIndex, segmentFinalIndex + 1));
+      if (segmentInfo.maxPmValue > maxPmValue) {
+        maxPmValue = segmentInfo.maxPmValue;
+      }
+      if (segmentInfo.minPmValue < minPmValue) {
+        minPmValue = segmentInfo.minPmValue;
+      }
+      spentTime += segmentInfo.spentTime;
     }.bind(this));
 
     // isEngaged property
@@ -209,6 +236,12 @@ class PerformanceMeasuresTrace {
     // meanPmValue property
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     jointSegmentsInfo.meanPmValue = this.meanOfData(segmentData, columnIndex);
+    // maxPmValue property
+    jointSegmentsInfo.maxPmValue = maxPmValue;
+    // minPmValue property
+    jointSegmentsInfo.minPmValue = minPmValue;
+    // spentTime property
+    jointSegmentsInfo.spentTime = spentTime;
     // meanChangeValue property
     jointSegmentsInfo.meanChangeValue = this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
     // segment property
