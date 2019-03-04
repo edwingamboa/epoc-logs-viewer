@@ -67,10 +67,11 @@ class EventsTrace {
     var lastSegmentInitTime;
     var lastSegmentAction;
     var currentSegmentInitTime;
+    var columns;
     this.logs.forEach(function (line, index) {
       if (line !== '' && index > 0) {
         line = line.replace(/\r?\n|\r/, '');
-        var columns = CsvProcessor.getColumnsOfCsvLine(line, ';');
+        columns = CsvProcessor.getColumnsOfCsvLine(line, ';');
         if (eventsOfInterest.indexOf(columns[columnOfEvent]) > -1) {
           currentSegmentInitTime = new Date(columns[columnOfTime]);
           if (!lastSegmentInitTime) {
@@ -91,6 +92,15 @@ class EventsTrace {
           };
         }
       }
+    });
+    // Add last identified segment
+    let lastSegmentFinishTime = new Date(columns[columnOfTime]);
+    segments.push({
+      time: lastSegmentInitTime,
+      finishTime: lastSegmentFinishTime,
+      action: lastSegmentAction,
+      details: lastSegmentAction + ': ' + DateProcessor.extractTimeHHMMSS(lastSegmentInitTime) +
+      ' - ' + DateProcessor.extractTimeHHMMSS(lastSegmentFinishTime)
     });
     return segments;
   }
