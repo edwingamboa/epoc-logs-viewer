@@ -159,7 +159,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
             position: 'outer-middle'
           },
           max: 1,
-          min: -1
+          min: 0
         }
       },
       bindto: '#' + divId,
