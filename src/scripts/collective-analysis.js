@@ -18,6 +18,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const ENGAGED_INDEX = 0;
   const DISENGAGED_INDEX = 1;
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
+  const COLOR_CODES = ['#3574B2', '#F77F21'];
 
   function createMetaDataMapForSegmentsOfInterest () {
     segmentsChartsData = new Map();
@@ -83,7 +84,6 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   }
 
   function generateChartObjectForSegment (segmentData, divId) {
-    var colors = ['#3574B2', '#F77F21'];
     return {
       data: {
         json: segmentData,
@@ -96,7 +96,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
           format: function (v) { return v + '%'; }
         },
         color: function (color, d) {
-          return colors[d.index];
+          return COLOR_CODES[d.index];
         }
       },
       axis: {
@@ -170,7 +170,10 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
     const numberOfDecimals = 5;
     const rowData = [
-      { label: 'Engaged', value: userData.segmentInfo.isEngaged ? 'Yes' : 'No' },
+      {
+        squareColor: userData.segmentInfo.isEngaged ? COLOR_CODES[ENGAGED_INDEX] : COLOR_CODES[DISENGAGED_INDEX],
+        value: userData.segmentInfo.isEngaged ? 'Engaged' : 'Disengaged'
+      },
       { label: 'Mean ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.meanPmValue, numberOfDecimals) },
       { label: 'Max ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.maxPmValue, numberOfDecimals) },
       { label: 'Min ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.minPmValue, numberOfDecimals) },
@@ -178,15 +181,30 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     ];
 
     let rowContent;
+    let rowLabel;
     rowData.forEach(function (row) {
       rowContent = tooltipTableBody
         .append('tr');
-      rowContent
-        .append('td')
-        .text(row.label);
-      rowContent
-        .append('td')
-        .text(row.value);
+      rowLabel = rowContent
+        .append('td');
+      if (row.hasOwnProperty('squareColor')) {
+        rowLabel
+          .append('span')
+          .style('background-color', row.squareColor);
+      }
+      if (row.hasOwnProperty('label')) {
+        rowLabel
+          .append('text')
+          .text(row.label);
+        rowContent
+          .append('td')
+          .text(row.value);
+      } else {
+        rowLabel.attr('colspan', 2);
+        rowLabel
+          .append('text')
+          .text(row.value);
+      }
     });
     return tooltipDiv.html();
   }
