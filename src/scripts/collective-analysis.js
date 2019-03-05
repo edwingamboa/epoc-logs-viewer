@@ -21,6 +21,8 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const COLOR_CODES = ['#3574B2', '#F77F21'];
   const CHARTS_DIV_ID = 'chartsContainer';
 
+  addSetUpUIElements();
+
   function addSetUpUIElements () {
     addElapTimeInputForSegments();
   }
@@ -303,7 +305,6 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
         });
         updateUserTraces();
         resetFileChoosers();
-        addSetUpUIElements();
       })
       .catch(function (error) {
         console.error(error);
