@@ -265,7 +265,7 @@ import { UIProcessor } from './utils';
   }
 
   function updateTrendChartSegments (segmentDistance) {
-    eventsTrace.updateSegments(segmentDistance);
+    eventsTrace.updateSegmentsDistance(segmentDistance);
     updateTrendChartGrids();
     changeDataOfTrendChart(null, function () {
       trendsChart.flush();

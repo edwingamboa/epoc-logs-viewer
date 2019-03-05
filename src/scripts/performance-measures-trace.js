@@ -127,31 +127,33 @@ class PerformanceMeasuresTrace {
       newData[1] = data[1];
       return newData;
     });
-    let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
-    let initTrendValue = trendFunction(segmentTrendData[0][0]);
-    let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
-    this.addTrendPointsToSegment(
-      relativeChangeData,
-      segment.initIndex,
-      segmentFinalIndex,
-      initTrendValue,
-      finishTrendValue
-    );
+    if (segmentTrendData.length > 1) {
+      let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
+      let initTrendValue = trendFunction(segmentTrendData[0][0]);
+      let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
+      this.addTrendPointsToSegment(
+        relativeChangeData,
+        segment.initIndex,
+        segmentFinalIndex,
+        initTrendValue,
+        finishTrendValue
+      );
 
-    const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
+      const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
 
-    let segmentData = this.getData().slice(segment.initIndex, segmentFinalIndex + 1);
+      let segmentData = this.getData().slice(segment.initIndex, segmentFinalIndex + 1);
 
-    let segmentInfo = {
-      segment: segment,
-      isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
-      meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
-      meanPmValue: this.meanOfData(segmentData, columnIndex),
-      maxPmValue: this.maxOfData(segmentData, columnIndex),
-      minPmValue: this.minOfData(segmentData, columnIndex),
-      spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime)
-    };
-    this.segmentsInfo.push(segmentInfo);
+      let segmentInfo = {
+        segment: segment,
+        isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
+        meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
+        meanPmValue: this.meanOfData(segmentData, columnIndex),
+        maxPmValue: this.maxOfData(segmentData, columnIndex),
+        minPmValue: this.minOfData(segmentData, columnIndex),
+        spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime)
+      };
+      this.segmentsInfo.push(segmentInfo);
+    }
   }
 
   isEngaged (initRelEngChange, finishRelEngChange) {
