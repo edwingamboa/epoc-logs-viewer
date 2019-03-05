@@ -10,7 +10,7 @@ export const TOLERANCE_TIME_DIV_ID = 'toleranceElapTimeEvents';
 export const MAIN_CONTENT_DIV_ID = 'mainContent';
 export const PROGRESS_SPINNER_ID = 'progressSpinner';
 export const ADD_FILE_BUTTON_ID = 'addTraces';
-export const DEFAULT_SEGMENT_DISTANCE = 50;
+export const DEFAULT_SEGMENT_DISTANCE = 1;
 export const epocEventsData = {
   '1': 'Eyes opened start',
   '2': 'Eyes opened end',

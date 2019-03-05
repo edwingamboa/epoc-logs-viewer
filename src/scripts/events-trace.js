@@ -1,5 +1,5 @@
 import { CsvProcessor, DateProcessor } from './utils';
-import { linkEvents } from './constants';
+import { linkEvents, DEFAULT_SEGMENT_DISTANCE } from './constants';
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -16,7 +16,6 @@ const traceLogsInfo = new Map([
   ['actionD2', { initCol: 6 }],
   ['actionD3', { initCol: 7 }]
 ]);
-const DEFAULT_SEGMENT_DISTANCE = 50;
 
 class EventsTrace {
   constructor (csv, segmentDistance) {

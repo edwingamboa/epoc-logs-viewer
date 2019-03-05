@@ -92,8 +92,8 @@ class UIProcessor {
     elapTimeInput.setAttribute('id', id);
     elapTimeInput.setAttribute('class', 'form-control');
     elapTimeInput.setAttribute('type', 'number');
-    elapTimeInput.setAttribute('step', 10);
-    elapTimeInput.setAttribute('min', 0);
+    elapTimeInput.setAttribute('step', 1);
+    elapTimeInput.setAttribute('min', 1);
     elapTimeInput.setAttribute('value', constants.DEFAULT_SEGMENT_DISTANCE);
     return elapTimeInput;
   }
