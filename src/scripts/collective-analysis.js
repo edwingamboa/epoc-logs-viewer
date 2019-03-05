@@ -20,6 +20,9 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
   const COLOR_CODES = ['#3574B2', '#F77F21'];
   const CHARTS_DIV_ID = 'chartsContainer';
+  const TOTAL_USERS_TEXT_ID = 'totalUsersText';
+  const CHART_DETAILS_CONTAINER_ID = 'detailsContainer';
+  const numberOfDecimalsForPercentages = 2;
 
   addSetUpUIElements();
 
@@ -83,11 +86,15 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     let segmentChartsDiv = d3.select('#' + segmentName);
     if (segmentChartsDiv.empty()) {
       let mainContainer = d3.select('#' + CHARTS_DIV_ID);
-      mainContainer.append('h4')
-        .text(segmentName);
       segmentChartsDiv = mainContainer.append('div');
       segmentChartsDiv.attr('id', segmentName)
         .attr('class', 'row');
+      segmentChartsDiv.append('h4')
+        .text(segmentName)
+        .attr('class', 'col-sm-12');
+      segmentChartsDiv.append('div')
+        .attr('id', CHART_DETAILS_CONTAINER_ID)
+        .attr('class', 'col-sm-12');
     }
     let chartContainer = segmentChartsDiv.append('div')
       .attr('class', 'col-sm-6');
@@ -243,16 +250,15 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
 
-    const numberOfDecimals = 2;
     segmentData.distributionData[ENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[ENGAGED_INDEX].count,
       segmentData.totalUsers,
-      numberOfDecimals
+      numberOfDecimalsForPercentages
     );
     segmentData.distributionData[DISENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[DISENGAGED_INDEX].count,
       segmentData.totalUsers,
-      numberOfDecimals
+      numberOfDecimalsForPercentages
     );
     segmentsChartsData.set(segmentName, segmentData);
   }
@@ -286,8 +292,28 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
   function updateAllCharts () {
     constants.segmentsOfInterest.forEach(function (segmentName) {
+      updateSegmentDetails(segmentName);
       updateBarCharts(segmentName);
       updateScatterCharts(segmentName);
+    });
+  }
+
+  function updateSegmentDetails (segmentName) {
+    let segmentData = segmentsChartsData.get(segmentName);
+    let detailsContainer = d3.select('#' + segmentName + ' #' + CHART_DETAILS_CONTAINER_ID);
+    let percentageOfUsers = NumberProcessor.calculateRoundedPercentage(
+      segmentData.totalUsers,
+      getTotalNumberOfUsers(),
+      numberOfDecimalsForPercentages
+    );
+    let details = [
+      { label: 'Number of users: ', value: segmentData.totalUsers + ' (' + percentageOfUsers + '%)' }
+    ];
+    details.forEach(function (detail) {
+      detailsContainer.append('span')
+        .text(detail.label);
+      detailsContainer.append('span')
+        .text(detail.value);
     });
   }
 
@@ -305,10 +331,19 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
         });
         updateUserTraces();
         resetFileChoosers();
+        updateNumberOfUsersText(getTotalNumberOfUsers());
       })
       .catch(function (error) {
         console.error(error);
       });
+  }
+
+  function getTotalNumberOfUsers () {
+    return eventsTracesData.size;
+  }
+
+  function updateNumberOfUsersText (totalUsers) {
+    d3.select('#' + TOTAL_USERS_TEXT_ID).text(totalUsers);
   }
 
   function updateUserTraces (segmentDistance) {
