@@ -19,14 +19,14 @@ const traceLogsInfo = new Map([
 const DEFAULT_SEGMENT_DISTANCE = 50;
 
 class EventsTrace {
-  constructor (csv) {
-    this.update(csv);
+  constructor (csv, segmentDistance) {
+    this.update(csv, segmentDistance);
   }
 
   update (csv, segmentDistance) {
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updateEvents();
-    this.updateSegments(segmentDistance);
+    this.updateSegmentsDistance(segmentDistance);
   }
 
   updateLogs (logs) {
@@ -37,7 +37,7 @@ class EventsTrace {
     this.events = this.extractUserTraceEvents(this.logs);
   }
 
-  updateSegments (segmentDistance) {
+  updateSegmentsDistance (segmentDistance) {
     this.segments = this.extractSegmentsFromEvents(
       traceLogsInfo.get('actionD1').values.link,
       traceLogsInfo.get('timestamp').initCol,

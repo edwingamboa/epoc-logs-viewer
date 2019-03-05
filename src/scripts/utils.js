@@ -1,5 +1,4 @@
 import * as constants from './constants';
-import { min } from 'simple-statistics';
 
 class CsvProcessor {
   static extractLines (csv) {
@@ -67,6 +66,46 @@ class UIProcessor {
     mainContentDiv.style.display = 'none';
     let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
     progressSpinner.style.display = 'block';
+  }
+
+  static createElapTimeInputForSegments (listenerFunction) {
+    var inputContainer = document.createElement('div');
+    inputContainer.setAttribute('id', constants.TOLERANCE_TIME_DIV_ID);
+    inputContainer.setAttribute('class', 'col form-group');
+
+    var elapTimeInputId = 'elapseTimeInput';
+    var elapTimeInput = this.createNumberInput(elapTimeInputId);
+    var elapTimeLabel = this.createLabelElement(elapTimeInputId, 'Minimum seconds between events:');
+
+    inputContainer.appendChild(elapTimeLabel);
+    inputContainer.appendChild(elapTimeInput);
+
+    elapTimeInput.addEventListener('change', function (e) {
+      listenerFunction(parseInt(this.value));
+    });
+
+    return inputContainer;
+  }
+
+  static createNumberInput (id) {
+    var elapTimeInput = document.createElement('input');
+    elapTimeInput.setAttribute('id', id);
+    elapTimeInput.setAttribute('class', 'form-control');
+    elapTimeInput.setAttribute('type', 'number');
+    elapTimeInput.setAttribute('step', 10);
+    elapTimeInput.setAttribute('min', 0);
+    elapTimeInput.setAttribute('value', constants.DEFAULT_SEGMENT_DISTANCE);
+    return elapTimeInput;
+  }
+
+  static createLabelElement (id, labelText, className) {
+    var labelEl = document.createElement('label');
+    labelEl.setAttribute('for', id);
+    labelEl.innerHTML = labelText;
+    if (className) {
+      labelEl.setAttribute('class', className);
+    }
+    return labelEl;
   }
 }
 

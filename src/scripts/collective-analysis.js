@@ -19,8 +19,24 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const DISENGAGED_INDEX = 1;
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
   const COLOR_CODES = ['#3574B2', '#F77F21'];
+  const CHARTS_DIV_ID = 'chartsContainer';
 
-  function createMetaDataMapForSegmentsOfInterest () {
+  function addSetUpUIElements () {
+    addElapTimeInputForSegments();
+  }
+
+  function addElapTimeInputForSegments () {
+    var elapTimeInputForTrendChart = UIProcessor.createElapTimeInputForSegments(function (newValue) {
+      updateSegmentDistance(parseInt(newValue));
+    });
+    document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID + 'Div').appendChild(elapTimeInputForTrendChart);
+  }
+
+  function updateSegmentDistance (segmentDistance) {
+    updateUserTraces(segmentDistance);
+  }
+
+  function initMetaDataMapForSegmentsOfInterest () {
     segmentsChartsData = new Map();
     constants.segmentsOfInterest.forEach(function (segmentName) {
       let barChartId = segmentName + 'distributionChart';
@@ -35,8 +51,8 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   }
 
   function createContainersForSegmentCharts (segmentName, barChartId, scatterChartId) {
-    createContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
-    createContainerForSegmentChart(segmentName, scatterChartId, 'Participants\' mean ' + currentPm);
+    appendContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
+    appendContainerForSegmentChart(segmentName, scatterChartId, 'Participants\' mean ' + currentPm);
   }
 
   function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
@@ -61,10 +77,10 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     return barChartData;
   }
 
-  function createContainerForSegmentChart (segmentName, divId, title) {
+  function appendContainerForSegmentChart (segmentName, divId, title) {
     let segmentChartsDiv = d3.select('#' + segmentName);
     if (segmentChartsDiv.empty()) {
-      let mainContainer = d3.select('#' + constants.MAIN_CONTENT_DIV_ID);
+      let mainContainer = d3.select('#' + CHARTS_DIV_ID);
       mainContainer.append('h4')
         .text(segmentName);
       segmentChartsDiv = mainContainer.append('div');
@@ -273,10 +289,9 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     });
   }
 
-  function addUserTraces (requests) {
+  function run (requests) {
     Promise.all(requests)
       .then(function (responses) {
-        createMetaDataMapForSegmentsOfInterest();
         performanceMeasuresData = new Map();
         eventsTracesData = new Map();
         responses.forEach(function (response) {
@@ -286,23 +301,30 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
             eventsTracesData.set(response.fileNameData.userId, response.data);
           }
         });
-
-        let eventsTrace;
-        let performanceMeasuresTrace;
-        eventsTracesData.forEach(function (data, userId) {
-          eventsTrace = new EventsTrace(data);
-          performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
-          performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
-            addUserTraceToData(segmentInfo, userId);
-          });
-        });
-        updateAllCharts();
+        updateUserTraces();
         resetFileChoosers();
-        UIProcessor.switchToMainContent();
+        addSetUpUIElements();
       })
       .catch(function (error) {
         console.error(error);
       });
+  }
+
+  function updateUserTraces (segmentDistance) {
+    UIProcessor.switchToProgressSpinner();
+    cleanChartsContainer();
+    initMetaDataMapForSegmentsOfInterest();
+    let eventsTrace;
+    let performanceMeasuresTrace;
+    eventsTracesData.forEach(function (data, userId) {
+      eventsTrace = new EventsTrace(data, segmentDistance);
+      performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
+      performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
+        addUserTraceToData(segmentInfo, userId);
+      });
+    });
+    updateAllCharts();
+    UIProcessor.switchToMainContent();
   }
 
   function extractDataOfFileName (fileName) {
@@ -329,7 +351,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       request = readSingleFile(file);
       requests.push(request);
     };
-    addUserTraces(requests);
+    run(requests);
   }
 
   function readSingleFile (file) {
@@ -355,6 +377,9 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   function resetFileChoosers () {
     filesInput.removeAttribute('disabled');
     filesInput.value = '';
-    performanceMeasuresData = [];
+  }
+
+  function cleanChartsContainer () {
+    d3.select('#' + CHARTS_DIV_ID).html('');
   }
 }());
