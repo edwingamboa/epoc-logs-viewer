@@ -54,18 +54,32 @@ class DateProcessor {
 }
 
 class UIProcessor {
-  static switchToMainContent () {
+  static displayMainContent () {
     let mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
-    mainContentDiv.style.display = 'block';
-    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
-    progressSpinner.style.display = 'none';
+    this.displayElement(mainContentDiv);
   }
 
-  static switchToProgressSpinner () {
+  static hideMainContent () {
     let mainContentDiv = document.querySelector('#' + constants.MAIN_CONTENT_DIV_ID);
-    mainContentDiv.style.display = 'none';
+    this.hideElement(mainContentDiv);
+  }
+
+  static displayProgressSpinner () {
     let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
-    progressSpinner.style.display = 'block';
+    this.displayElement(progressSpinner);
+  }
+
+  static hideProgressSpinner () {
+    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
+    this.hideElement(progressSpinner);
+  }
+
+  static hideElement (element) {
+    element.classList.add('hidden');
+  }
+
+  static displayElement (element) {
+    element.classList.remove('hidden');
   }
 
   static createElapTimeInputForSegments (listenerFunction) {
@@ -81,7 +95,7 @@ class UIProcessor {
     inputContainer.appendChild(elapTimeInput);
 
     elapTimeInput.addEventListener('change', function (e) {
-      listenerFunction(parseInt(this.value));
+      listenerFunction(this.value);
     });
 
     return inputContainer;

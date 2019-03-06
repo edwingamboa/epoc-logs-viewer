@@ -16,20 +16,21 @@
             </div>
         </div>
 
-        <div id="mainContent">
+        <div id="mainContent" class="hidden">
             <h3>Set Up</h3>
             <div class="row form-inline" id="toleranceElapTimeEventsDiv"></div>
+            <input type="button" value="Set" id="setUpSubmitBtn" class="btn btn-primary">
             <hr>
             <h3>Results</h3>
             <div class="form-text">
                 <span>Total number of users: </span><span id="totalUsersText"></span>
             </div>
             <div id="chartsContainer"></div>
-        </div>
-        <div id="progressSpinner">
-            <div class="d-flex justify-content-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Loading...</span>
+            <div id="progressSpinner">
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
                 </div>
             </div>
         </div>

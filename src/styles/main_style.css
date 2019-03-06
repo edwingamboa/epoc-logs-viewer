@@ -2,6 +2,26 @@
   height: 40vh;
 }
 
-#mainContent, #progressSpinner {
-  display: none;
+#progressSpinner {
+  position: absolute;
+  z-index: 999;
+  height: 100%;
+  width: 100%;
+  overflow: visible;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: #ffffff;
+}
+
+#mainContent {
+  position: relative;
+}
+
+.hidden {
+   position: absolute !important;
+   top: -9999px !important;
+   left: -9999px !important;
 }

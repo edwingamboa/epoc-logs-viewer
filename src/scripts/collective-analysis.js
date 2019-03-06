@@ -15,6 +15,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   var eventsTracesData;
   var currentPm = 'SCA_ENG';
   var segmentsChartsData;
+  var segmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
   const ENGAGED_INDEX = 0;
   const DISENGAGED_INDEX = 1;
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
@@ -22,22 +23,28 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const CHARTS_DIV_ID = 'chartsContainer';
   const TOTAL_USERS_TEXT_ID = 'totalUsersText';
   const CHART_DETAILS_CONTAINER_ID = 'detailsContainer';
+  const CHART_HEIGHT = 200;
   const numberOfDecimalsForPercentages = 2;
+  const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
 
   addSetUpUIElements();
 
   function addSetUpUIElements () {
     addElapTimeInputForSegments();
+    document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
+      UIProcessor.displayProgressSpinner();
+      setTimeout(updateSegmentDistanceInCharts, 500);
+    });
   }
 
   function addElapTimeInputForSegments () {
     var elapTimeInputForTrendChart = UIProcessor.createElapTimeInputForSegments(function (newValue) {
-      updateSegmentDistance(parseInt(newValue));
+      segmentDistance = parseInt(newValue);
     });
     document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID + 'Div').appendChild(elapTimeInputForTrendChart);
   }
 
-  function updateSegmentDistance (segmentDistance) {
+  function updateSegmentDistanceInCharts () {
     updateUserTraces(segmentDistance);
   }
 
@@ -137,6 +144,9 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
         }
       },
       bindto: '#' + divId,
+      size: {
+        height: CHART_HEIGHT
+      },
       legend: {
         show: false
       }
@@ -172,6 +182,9 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
         }
       },
       bindto: '#' + divId,
+      size: {
+        height: CHART_HEIGHT
+      },
       tooltip: {
         contents: function (d) {
           return generateUserTooltipInfoHTMLCode(segmentData[d[0].index]);
@@ -347,7 +360,6 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   }
 
   function updateUserTraces (segmentDistance) {
-    UIProcessor.switchToProgressSpinner();
     cleanChartsContainer();
     initMetaDataMapForSegmentsOfInterest();
     let eventsTrace;
@@ -360,7 +372,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       });
     });
     updateAllCharts();
-    UIProcessor.switchToMainContent();
+    UIProcessor.hideProgressSpinner();
   }
 
   function extractDataOfFileName (fileName) {
@@ -373,9 +385,10 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   }
 
   filesInput.addEventListener('change', function (e) {
+    UIProcessor.displayProgressSpinner();
+    UIProcessor.displayMainContent();
     handleFilesLoading(e.target.files);
     disableFileChoosers();
-    UIProcessor.switchToProgressSpinner();
   });
 
   function handleFilesLoading (files) {
