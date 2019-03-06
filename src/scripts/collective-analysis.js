@@ -1,6 +1,6 @@
 /* global FileReader */
 import '../styles/main_style.css';
-import '../styles/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import EventsTrace from './events-trace';
 import PerformanceMeasuresTrace from './performance-measures-trace';
 import 'c3/c3.css';

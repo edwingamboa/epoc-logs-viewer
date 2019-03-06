@@ -1,7 +1,7 @@
 /* global FileReader */
 
 import '../styles/main_style.css';
-import '../styles/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
