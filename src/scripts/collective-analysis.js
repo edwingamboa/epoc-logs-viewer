@@ -77,7 +77,8 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       scatterData: scatterColumns,
       scatterChart: createChartForSegmentOfInterest(
         generateChartObjectForScatter(scatterColumns, scatterChartId)
-      )
+      ),
+      userIds: []
     };
     return segmentChartsData;
   }
@@ -252,6 +253,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     if (segmentsChartsData.has(segmentName)) {
       let segmentData = segmentsChartsData.get(segmentName);
       segmentData.totalUsers += 1;
+      segmentData.userIds.push(userId);
       updateBarChartsData(segmentInfo);
       updateScatterChartsData(segmentInfo, userId);
     }
@@ -322,12 +324,30 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     let details = [
       { label: 'Number of users: ', value: segmentData.totalUsers + ' (' + percentageOfUsers + '%)' }
     ];
+    let missingUsers = missingUsersOfSegment(segmentName);
+    if (missingUsers.length > 0) {
+      details.push({ label: 'Users who missed the segment: ', value: missingUsers.join(', ') });
+    }
+    let detailContainer;
     details.forEach(function (detail) {
-      detailsContainer.append('span')
-        .text(detail.label);
-      detailsContainer.append('span')
+      detailContainer = detailsContainer.append('div');
+      detailContainer.append('span')
+        .text(detail.label)
+        .attr('class', 'font-weight-bold');
+      detailContainer.append('span')
         .text(detail.value);
     });
+  }
+
+  function missingUsersOfSegment (segmentName) {
+    let segmentData = segmentsChartsData.get(segmentName);
+    let missingUsers = [];
+    for (let userId of performanceMeasuresData.keys()) {
+      if (segmentData.userIds.indexOf(userId) < 0) {
+        missingUsers.push(userId);
+      }
+    }
+    return missingUsers;
   }
 
   function run (requests) {
