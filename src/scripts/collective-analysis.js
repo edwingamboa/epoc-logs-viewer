@@ -7,6 +7,7 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
+import * as ss from 'simple-statistics';
 import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
 (function () {
@@ -78,7 +79,8 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       scatterChart: createChartForSegmentOfInterest(
         generateChartObjectForScatter(scatterColumns, scatterChartId)
       ),
-      userIds: []
+      userIds: [],
+      spentTimes: []
     };
     return segmentChartsData;
   }
@@ -254,6 +256,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       let segmentData = segmentsChartsData.get(segmentName);
       segmentData.totalUsers += 1;
       segmentData.userIds.push(userId);
+      segmentData.spentTimes.push(segmentInfo.spentTime);
       updateBarChartsData(segmentInfo);
       updateScatterChartsData(segmentInfo, userId);
     }
@@ -326,8 +329,18 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     ];
     let missingUsers = missingUsersOfSegment(segmentName);
     if (missingUsers.length > 0) {
-      details.push({ label: 'Users who missed the segment: ', value: missingUsers.join(', ') });
+      details.push({
+        label: 'Users who missed the segment: ',
+        value: segmentData.totalUsers === 0 ? 'All' : missingUsers.join(', ')
+      });
     }
+    if (segmentData.spentTimes.length > 0) {
+      details.push({
+        label: 'Mean users\' spent time (HH:MM:SS): ',
+        value: DateProcessor.secondsToHHMMSS((ss.mean(segmentData.spentTimes)))
+      });
+    }
+
     let detailContainer;
     details.forEach(function (detail) {
       detailContainer = detailsContainer.append('div');
