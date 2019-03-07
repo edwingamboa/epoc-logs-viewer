@@ -105,6 +105,16 @@ class EventsTrace {
   }
 }
 
+class Segment {
+  constructor (initTime, finishTime, action) {
+    this.time = initTime;
+    this.finishTime = finishTime;
+    this.action = action;
+    this.details = action + ':' + DateProcessor.extractTimeHHMMSS(initTime) +
+    ' - ' + DateProcessor.extractTimeHHMMSS(finishTime);
+  }
+}
+
 class Event {
   constructor (time, action, details) {
     this.time = time;
