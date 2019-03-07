@@ -127,6 +127,47 @@ class UIProcessor {
     }
     return labelEl;
   }
+
+  static createRadioBtsToSelectPm (changeCallBack, groupName) {
+    if (!groupName) {
+      groupName = constants.CURRENT_PM_GROUP_NAME;
+    }
+    let radioButtonsContainer = document.createElement('div');
+    constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
+      let pmInput = this.createRadioButton(pmId, groupName, pmId === constants.DEFAULT_TREND_CHART_PM_ID, changeCallBack);
+      let labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
+      let pmLabel = this.createLabelElement(pmId, labelText, 'form-check-label');
+      let inputGroupContainer = document.createElement('div');
+      inputGroupContainer.setAttribute('class', 'form-check form-check-inline');
+      inputGroupContainer.appendChild(pmInput);
+      inputGroupContainer.appendChild(pmLabel);
+      radioButtonsContainer.appendChild(inputGroupContainer);
+    }.bind(this));
+    return radioButtonsContainer;
+  }
+
+  static createRadioButton (id, name, checked, changeCallBack) {
+    var radioButton = this.createInputElement(id, 'radio', 'form-check-input', changeCallBack, name);
+    if (checked) {
+      radioButton.setAttribute('checked', checked);
+    }
+    return radioButton;
+  }
+
+  static createInputElement (id, type, className, changeCallBack, name) {
+    var inputEl = document.createElement('input');
+    inputEl.setAttribute('id', id);
+    inputEl.setAttribute('value', id);
+    inputEl.setAttribute('type', type);
+    if (name) {
+      inputEl.setAttribute('name', name);
+    }
+    inputEl.setAttribute('class', className);
+    inputEl.addEventListener('change', function (e) {
+      changeCallBack(this.value);
+    });
+    return inputEl;
+  }
 }
 
 class NumberProcessor {
