@@ -34,8 +34,16 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     addElapTimeInputForSegments();
     document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
       UIProcessor.displayProgressSpinner();
-      setTimeout(updateSegmentDistanceInCharts, 500);
+      setTimeout(updateUserTraces, 500);
     });
+    addCurrentPmSelector();
+  }
+
+  function addCurrentPmSelector () {
+    let currentPmSelector = UIProcessor.createRadioBtsToSelectPm(function (newValue) {
+      currentPm = newValue;
+    });
+    document.querySelector('#' + constants.CURRENT_PM_SELECTION_DIV_ID).appendChild(currentPmSelector);
   }
 
   function addElapTimeInputForSegments () {
@@ -43,10 +51,6 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
       segmentDistance = parseInt(newValue);
     });
     document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID + 'Div').appendChild(elapTimeInputForTrendChart);
-  }
-
-  function updateSegmentDistanceInCharts () {
-    updateUserTraces(segmentDistance);
   }
 
   function initMetaDataMapForSegmentsOfInterest () {
@@ -392,7 +396,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
     d3.select('#' + TOTAL_USERS_TEXT_ID).text(totalUsers);
   }
 
-  function updateUserTraces (segmentDistance) {
+  function updateUserTraces () {
     cleanChartsContainer();
     initMetaDataMapForSegmentsOfInterest();
     let eventsTrace;
