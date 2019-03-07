@@ -79,13 +79,7 @@ class EventsTrace {
           }
           if (lastSegmentInitTime &&
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
-            segments.push({
-              time: lastSegmentInitTime,
-              finishTime: currentSegmentInitTime,
-              action: lastSegmentAction,
-              details: lastSegmentAction + ': ' + DateProcessor.extractTimeHHMMSS(lastSegmentInitTime) +
-              ' - ' + DateProcessor.extractTimeHHMMSS(currentSegmentInitTime)
-            });
+            segments.push(new Segment(lastSegmentInitTime, currentSegmentInitTime, lastSegmentAction));
             lastSegmentInitTime = currentSegmentInitTime;
             lastSegmentAction = columns[columnOfEvent];
           };
@@ -94,13 +88,7 @@ class EventsTrace {
     });
     // Add last identified segment
     let lastSegmentFinishTime = new Date(columns[columnOfTime]);
-    segments.push({
-      time: lastSegmentInitTime,
-      finishTime: lastSegmentFinishTime,
-      action: lastSegmentAction,
-      details: lastSegmentAction + ': ' + DateProcessor.extractTimeHHMMSS(lastSegmentInitTime) +
-      ' - ' + DateProcessor.extractTimeHHMMSS(lastSegmentFinishTime)
-    });
+    segments.push(new Segment(lastSegmentInitTime, lastSegmentFinishTime, lastSegmentAction));
     return segments;
   }
 }
