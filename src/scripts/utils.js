@@ -134,7 +134,7 @@ class UIProcessor {
     }
     let radioButtonsContainer = document.createElement('div');
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
-      let pmInput = this.createRadioButton(pmId, groupName, pmId === constants.DEFAULT_TREND_CHART_PM_ID, changeCallBack);
+      let pmInput = this.createRadioButton(pmId, groupName, pmId === constants.DEFAULT_PM_ID, changeCallBack);
       let labelText = PmProcessor.generateVerboseOfPm(pmId);
       let pmLabel = this.createLabelElement(pmId, labelText, 'form-check-label');
       let inputGroupContainer = document.createElement('div');
@@ -173,6 +173,21 @@ class UIProcessor {
 class PmProcessor {
   static generateVerboseOfPm (pmId) {
     return constants.pmLogsInfo.get(pmId).verbose + ' (' + pmId + ')';
+  }
+
+  static getDesiredAdjective (pmId) {
+    return constants.pmLogsInfo.get(pmId).desiredAdjective;
+  }
+
+  static getNotDesiredAdjective (pmId) {
+    if (constants.pmLogsInfo.get(pmId).desiredAdjective.indexOf('Not ') > -1) {
+      return constants.pmLogsInfo.get(pmId).desiredAdjective.replace('Not ', '');
+    }
+    return 'Not ' + constants.pmLogsInfo.get(pmId).desiredAdjective.toLowerCase();
+  }
+
+  static isNegativeConnoted (pmId) {
+    return constants.pmLogsInfo.get(pmId).negativeConnoted;
   }
 }
 

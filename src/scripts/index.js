@@ -46,7 +46,7 @@ import { UIProcessor } from './utils';
 
         var eventsOfInterestGridLines = parseUserTraceAsGridLines(eventsTrace.segments);
         trendsChart = addChart(
-          performanceMeasuresTrace.getTrendData(true),
+          performanceMeasuresTrace.getTrendData(constants.DEFAULT_PM_ID, true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines
@@ -118,8 +118,8 @@ import { UIProcessor } from './utils';
   }
 
   function changeDataOfTrendChart (pmId, onloaded) {
-    pmId = pmId || constants.DEFAULT_TREND_CHART_PM_ID;
-    var relativeChangeValsAndEvents = performanceMeasuresTrace.calculateTrendDataOfPm(eventsTrace.segments, pmId);
+    pmId = pmId || constants.DEFAULT_PM_ID;
+    var relativeChangeValsAndEvents = performanceMeasuresTrace.getTrendData(pmId, true);
     var loadData = {
       rows: relativeChangeValsAndEvents,
       x: 'TimeStamp',
@@ -208,7 +208,7 @@ import { UIProcessor } from './utils';
   }
   function appendRBtnsForTrendChart () {
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
-      var pmInput = createInputElement(pmId, 'trendChartPM', pmId === constants.DEFAULT_TREND_CHART_PM_ID);
+      var pmInput = createInputElement(pmId, 'trendChartPM', pmId === constants.DEFAULT_PM_ID);
       var labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
       var pmLabel = UIProcessor.createLabelElement(pmId, labelText, 'form-check-label');
       var trendChartRBtnsDiv = document.querySelector('#' + constants.TREND_CHART_R_BTNS_DIV_ID);

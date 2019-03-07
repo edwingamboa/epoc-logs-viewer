@@ -1,5 +1,5 @@
 import * as ss from 'simple-statistics';
-import { CsvProcessor, DateProcessor } from './utils';
+import { CsvProcessor, DateProcessor, PmProcessor } from './utils';
 import { pmLogsInfo } from './constants';
 
 const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
@@ -11,9 +11,10 @@ class PerformanceMeasuresTrace {
 
   update (csv, segments, desiredPms) {
     this.segmentsInfo = [];
+    this.segments = segments;
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updatePerformanceMeasures(desiredPms);
-    this.updateTrendData(segments);
+    this.updateTrendData(desiredPms);
   }
 
   updateLogs (logs) {
@@ -24,10 +25,6 @@ class PerformanceMeasuresTrace {
     this.dataWithHeadings = this.extractScaPerformanceMeasures(desiredPms);
   }
 
-  updateTrendData (segments) {
-    this.trendDataWithHeadings = this.calculateTrendDataOfPm(segments);
-  }
-
   getData (withHeadings) {
     if (withHeadings) {
       return this.dataWithHeadings;
@@ -35,11 +32,20 @@ class PerformanceMeasuresTrace {
     return this.dataWithHeadings.slice(1);
   }
 
-  getTrendData (withHeadings) {
+  getTrendData (pmId, withHeadings) {
+    let trendDataWithHeadings = this.trendDataWithHeadings.get(pmId);
     if (withHeadings) {
-      return this.trendDataWithHeadings;
+      return trendDataWithHeadings;
     }
-    return this.trendDataWithHeadings.slice(1);
+    return trendDataWithHeadings.slice(1);
+  }
+
+  updateTrendData (desiredPms) {
+    desiredPms = desiredPms || pmLogsInfo.get('pmIds');
+    this.trendDataWithHeadings = new Map();
+    desiredPms.forEach(function (pmId) {
+      this.trendDataWithHeadings.set(pmId, this.calculateTrendDataOfPm(pmId));
+    }.bind(this));
   }
 
   extractScaPerformanceMeasures (desiredPms) {
@@ -69,7 +75,7 @@ class PerformanceMeasuresTrace {
     return data;
   }
 
-  calculateTrendDataOfPm (segments, pmId) {
+  calculateTrendDataOfPm (pmId) {
     pmId = pmId || 'SCA_ENG';
     const timeColumnIndex = pmLogsInfo.get('TimeStamp').initCol;
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
@@ -88,7 +94,7 @@ class PerformanceMeasuresTrace {
       ]);
     }.bind(this));
 
-    var segmentsWithIndexes = this.addIndexesToSegments(segments, this.getData(), timeColumnIndex);
+    var segmentsWithIndexes = this.addIndexesToSegments(this.segments, this.getData(), timeColumnIndex);
     segmentsWithIndexes.forEach(function (segment) {
       if (segment.hasOwnProperty('initIndex')) {
         this.addSegment(relEngChangeVals, segment, pmId);
@@ -145,7 +151,7 @@ class PerformanceMeasuresTrace {
 
       let segmentInfo = {
         segment: segment,
-        isEngaged: this.isEngaged(initTrendValue, finishTrendValue),
+        isDesired: this.isDesired(pmId, initTrendValue, finishTrendValue),
         meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
         meanPmValue: this.meanOfData(segmentData, columnIndex),
         maxPmValue: this.maxOfData(segmentData, columnIndex),
@@ -156,8 +162,9 @@ class PerformanceMeasuresTrace {
     }
   }
 
-  isEngaged (initRelEngChange, finishRelEngChange) {
-    return (finishRelEngChange - initRelEngChange) > 0;
+  isDesired (pmId, initRelEngChange, finishRelEngChange) {
+    let positiveTrend = (finishRelEngChange - initRelEngChange) > 0;
+    return !PmProcessor.isNegativeConnoted(pmId) ? positiveTrend : !positiveTrend;
   }
 
   meanOfData (segmentData, valueIndex) {
@@ -218,8 +225,8 @@ class PerformanceMeasuresTrace {
     let spentTime = 0;
     segmentsInfo.forEach(function (segmentInfo) {
       segment = segmentInfo.segment;
-      segmentFinalIndex = segment.finishIndex || this.getData.length - 1;
-      segmentTrendData = segmentTrendData.concat(this.getTrendData().slice(segment.initIndex, segmentFinalIndex + 1));
+      segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
+      segmentTrendData = segmentTrendData.concat(this.getTrendData(pmId).slice(segment.initIndex, segmentFinalIndex + 1));
       segmentData = segmentData.concat(this.getData().slice(segment.initIndex, segmentFinalIndex + 1));
       if (segmentInfo.maxPmValue > maxPmValue) {
         maxPmValue = segmentInfo.maxPmValue;
@@ -230,11 +237,11 @@ class PerformanceMeasuresTrace {
       spentTime += segmentInfo.spentTime;
     }.bind(this));
 
-    // isEngaged property
+    // isDesired property
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
     let initTrendValue = trendFunction(segmentTrendData[0][0]);
     let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
-    jointSegmentsInfo.isEngaged = this.isEngaged(initTrendValue, finishTrendValue);
+    jointSegmentsInfo.isDesired = this.isDesired(pmId, initTrendValue, finishTrendValue);
     // meanPmValue property
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     jointSegmentsInfo.meanPmValue = this.meanOfData(segmentData, columnIndex);

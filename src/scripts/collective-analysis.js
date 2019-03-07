@@ -14,11 +14,11 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
   var performanceMeasuresData;
   var eventsTracesData;
-  var currentPm = 'SCA_ENG';
+  var currentPm = constants.DEFAULT_PM_ID;
   var segmentsChartsData;
   var segmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
-  const ENGAGED_INDEX = 0;
-  const DISENGAGED_INDEX = 1;
+  const POSITIVE_RESULT_INDEX = 0;
+  const NEGATIVE_RESULT_INDEX = 1;
   const TRACE_TYPES = { pm: 'Pm', trace: 'Trace' };
   const COLOR_CODES = ['#3574B2', '#F77F21'];
   const CHARTS_DIV_ID = 'chartsContainer';
@@ -96,8 +96,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function generateInitialBarChartData () {
     let barChartData = [];
-    barChartData[ENGAGED_INDEX] = { name: 'engaged', percentage: 0, count: 0 };
-    barChartData[DISENGAGED_INDEX] = { name: 'disengaged', percentage: 0, count: 0 };
+    barChartData[POSITIVE_RESULT_INDEX] = { name: PmProcessor.getDesiredAdjective(currentPm), percentage: 0, count: 0 };
+    barChartData[NEGATIVE_RESULT_INDEX] = { name: PmProcessor.getNotDesiredAdjective(currentPm), percentage: 0, count: 0 };
     return barChartData;
   }
 
@@ -172,7 +172,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         type: 'scatter',
         keys: {
           x: 'userId',
-          value: ['engaged', 'disengaged']
+          value: [PmProcessor.getDesiredAdjective(currentPm), PmProcessor.getNotDesiredAdjective(currentPm)]
         },
         xSort: false
       },
@@ -221,8 +221,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     const numberOfDecimals = 5;
     const rowData = [
       {
-        squareColor: userData.segmentInfo.isEngaged ? COLOR_CODES[ENGAGED_INDEX] : COLOR_CODES[DISENGAGED_INDEX],
-        value: userData.segmentInfo.isEngaged ? 'Engaged' : 'Disengaged'
+        squareColor: userData.segmentInfo.isDesired ? COLOR_CODES[POSITIVE_RESULT_INDEX] : COLOR_CODES[NEGATIVE_RESULT_INDEX],
+        value: userData.segmentInfo.isDesired ? PmProcessor.getDesiredAdjective(currentPm) : PmProcessor.getNotDesiredAdjective(currentPm)
       },
       { label: 'Mean ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.meanPmValue, numberOfDecimals) },
       { label: 'Max ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.maxPmValue, numberOfDecimals) },
@@ -274,16 +274,16 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   function updateBarChartsData (segmentInfo) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
-    let dataIndex = segmentInfo.isEngaged ? ENGAGED_INDEX : DISENGAGED_INDEX;
+    let dataIndex = segmentInfo.isDesired ? POSITIVE_RESULT_INDEX : NEGATIVE_RESULT_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
 
-    segmentData.distributionData[ENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
-      segmentData.distributionData[ENGAGED_INDEX].count,
+    segmentData.distributionData[POSITIVE_RESULT_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
+      segmentData.distributionData[POSITIVE_RESULT_INDEX].count,
       segmentData.totalUsers,
       numberOfDecimalsForPercentages
     );
-    segmentData.distributionData[DISENGAGED_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
-      segmentData.distributionData[DISENGAGED_INDEX].count,
+    segmentData.distributionData[NEGATIVE_RESULT_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
+      segmentData.distributionData[NEGATIVE_RESULT_INDEX].count,
       segmentData.totalUsers,
       numberOfDecimalsForPercentages
     );
@@ -296,10 +296,10 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let userData = {};
     userData.userId = userId;
     userData.segmentInfo = segmentInfo;
-    if (segmentInfo.isEngaged) {
-      userData.engaged = segmentInfo.meanPmValue;
+    if (segmentInfo.isDesired) {
+      userData[PmProcessor.getDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
     } else {
-      userData.disengaged = segmentInfo.meanPmValue;
+      userData[PmProcessor.getNotDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
     }
     segmentData.scatterData.push(userData);
     segmentsChartsData.set(segmentName, segmentData);

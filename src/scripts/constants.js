@@ -5,7 +5,7 @@ export const UT_FILE_INPUT_ID = 'userTraceFileUrl';
 export const LOGS_FILE_INPUT_ID = 'logsUrl';
 export const LOADED_FILES_TEXT_ID = 'loadedFilesText';
 export const TREND_CHART_R_BTNS_DIV_ID = 'trendChartPmRBtnsDiv';
-export const DEFAULT_TREND_CHART_PM_ID = 'SCA_ENG';
+export const DEFAULT_PM_ID = 'SCA_ENG';
 export const TOLERANCE_TIME_DIV_ID = 'toleranceElapTimeEvents';
 export const MAIN_CONTENT_DIV_ID = 'mainContent';
 export const PROGRESS_SPINNER_ID = 'progressSpinner';
@@ -38,13 +38,13 @@ export const userTraceActionsIds = {
 
 export const pmLogsInfo = new Map([
   ['TimeStamp', { initCol: 0, verbose: 'Time Stamp' }],
-  ['SCA_ENG', { initCol: 1, verbose: 'Engagement' }],
-  ['SCA_VAL', { initCol: 6, verbose: 'Interest' }],
-  ['SCA_MED', { initCol: 11, verbose: 'Relaxation' }],
-  ['SCA_FRU', { initCol: 16, verbose: 'Stress' }],
-  ['SCA_FOC', { initCol: 21, verbose: 'Focus' }],
-  ['SCA_EXC', { initCol: 26, verbose: 'Excitement' }],
-  ['SCA_LEX', { initCol: 31, verbose: 'Long-term excitement' }],
+  ['SCA_ENG', { initCol: 1, verbose: 'Engagement', desiredAdjective: 'Engaged' }],
+  ['SCA_VAL', { initCol: 6, verbose: 'Interest', desiredAdjective: 'Interested' }],
+  ['SCA_MED', { initCol: 11, verbose: 'Relaxation', desiredAdjective: 'Relaxed' }],
+  ['SCA_FRU', { initCol: 16, verbose: 'Stress', desiredAdjective: 'Not stressed', negativeConnoted: true }],
+  ['SCA_FOC', { initCol: 21, verbose: 'Focus', desiredAdjective: 'Focused' }],
+  ['SCA_EXC', { initCol: 26, verbose: 'Excitement', desiredAdjective: 'Excited' }],
+  ['SCA_LEX', { initCol: 31, verbose: 'Long-term excitement', desiredAdjective: 'Long term excited' }],
   ['pmIds', ['SCA_ENG', 'SCA_VAL', 'SCA_MED', 'SCA_FRU', 'SCA_FOC', 'SCA_EXC', 'SCA_LEX']]
 ]);
 
