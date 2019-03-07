@@ -68,8 +68,10 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   }
 
   function createContainersForSegmentCharts (segmentName, barChartId, scatterChartId) {
-    appendContainerForSegmentChart(segmentName, barChartId, 'Participants distribution');
-    appendContainerForSegmentChart(segmentName, scatterChartId, 'Participants\' mean ' + currentPm);
+    const barChartTitle = 'Participants distribution';
+    const scatterTitle = 'Participants\' mean ' + UIProcessor.generateVerboseOfPm(currentPm);
+    appendContainerForSegmentChart(segmentName, barChartId, barChartTitle);
+    appendContainerForSegmentChart(segmentName, scatterChartId, scatterTitle);
   }
 
   function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {

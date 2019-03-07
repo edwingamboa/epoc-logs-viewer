@@ -135,7 +135,7 @@ class UIProcessor {
     let radioButtonsContainer = document.createElement('div');
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
       let pmInput = this.createRadioButton(pmId, groupName, pmId === constants.DEFAULT_TREND_CHART_PM_ID, changeCallBack);
-      let labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
+      let labelText = this.generateVerboseOfPm(pmId);
       let pmLabel = this.createLabelElement(pmId, labelText, 'form-check-label');
       let inputGroupContainer = document.createElement('div');
       inputGroupContainer.setAttribute('class', 'form-check form-check-inline');
@@ -144,6 +144,10 @@ class UIProcessor {
       radioButtonsContainer.appendChild(inputGroupContainer);
     }.bind(this));
     return radioButtonsContainer;
+  }
+
+  static generateVerboseOfPm (pmId) {
+    return pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
   }
 
   static createRadioButton (id, name, checked, changeCallBack) {
