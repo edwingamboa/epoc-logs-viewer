@@ -135,7 +135,7 @@ class UIProcessor {
     let radioButtonsContainer = document.createElement('div');
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
       let pmInput = this.createRadioButton(pmId, groupName, pmId === constants.DEFAULT_TREND_CHART_PM_ID, changeCallBack);
-      let labelText = this.generateVerboseOfPm(pmId);
+      let labelText = PmProcessor.generateVerboseOfPm(pmId);
       let pmLabel = this.createLabelElement(pmId, labelText, 'form-check-label');
       let inputGroupContainer = document.createElement('div');
       inputGroupContainer.setAttribute('class', 'form-check form-check-inline');
@@ -144,10 +144,6 @@ class UIProcessor {
       radioButtonsContainer.appendChild(inputGroupContainer);
     }.bind(this));
     return radioButtonsContainer;
-  }
-
-  static generateVerboseOfPm (pmId) {
-    return pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
   }
 
   static createRadioButton (id, name, checked, changeCallBack) {
@@ -174,6 +170,12 @@ class UIProcessor {
   }
 }
 
+class PmProcessor {
+  static generateVerboseOfPm (pmId) {
+    return constants.pmLogsInfo.get(pmId).verbose + ' (' + pmId + ')';
+  }
+}
+
 class NumberProcessor {
   static calculatePercentage (value, total) {
     return (value / total) * 100;
@@ -188,4 +190,4 @@ class NumberProcessor {
   }
 }
 
-export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor };
+export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor, PmProcessor };

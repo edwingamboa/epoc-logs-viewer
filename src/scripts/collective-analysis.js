@@ -8,7 +8,7 @@ import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
 import * as ss from 'simple-statistics';
-import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
+import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './utils';
 
 (function () {
   var filesInput = document.querySelector('#' + constants.LOGS_FILE_INPUT_ID);
@@ -27,13 +27,16 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
   const CHART_HEIGHT = 200;
   const numberOfDecimalsForPercentages = 2;
   const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
+  const SUFFIX_TITLE_ID = 'suffixTitle';
 
   addSetUpUIElements();
 
   function addSetUpUIElements () {
     addElapTimeInputForSegments();
+    updateCurrentPmInResultsTitle();
     document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
       UIProcessor.displayProgressSpinner();
+      updateCurrentPmInResultsTitle();
       setTimeout(updateUserTraces, 500);
     });
     addCurrentPmSelector();
@@ -69,7 +72,7 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
   function createContainersForSegmentCharts (segmentName, barChartId, scatterChartId) {
     const barChartTitle = 'Participants distribution';
-    const scatterTitle = 'Participants\' mean ' + UIProcessor.generateVerboseOfPm(currentPm);
+    const scatterTitle = 'Participants\' mean ' + PmProcessor.generateVerboseOfPm(currentPm);
     appendContainerForSegmentChart(segmentName, barChartId, barChartTitle);
     appendContainerForSegmentChart(segmentName, scatterChartId, scatterTitle);
   }
@@ -396,6 +399,10 @@ import { UIProcessor, NumberProcessor, DateProcessor } from './utils';
 
   function updateNumberOfUsersText (totalUsers) {
     d3.select('#' + TOTAL_USERS_TEXT_ID).text(totalUsers);
+  }
+
+  function updateCurrentPmInResultsTitle () {
+    d3.select('#' + SUFFIX_TITLE_ID).text(PmProcessor.generateVerboseOfPm(currentPm));
   }
 
   function updateUserTraces () {
