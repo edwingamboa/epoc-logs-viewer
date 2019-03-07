@@ -20,6 +20,7 @@ import { UIProcessor } from './utils';
   var firstRun = true;
   var eventsTrace;
   var performanceMeasuresTrace;
+  const CHART_HEIGHT = 300;
 
   pmFileInput.addEventListener('change', function (e) {
     handleFileLoading(e.target.files[0], 'pm');
@@ -57,7 +58,7 @@ import { UIProcessor } from './utils';
           appendElapTimeInputForTrendChart();
           firstRun = false;
         }
-        UIProcessor.switchToMainContent();
+        UIProcessor.hideProgressSpinner();
       })
       .catch(function (error) {
         console.error(error);
@@ -72,8 +73,11 @@ import { UIProcessor } from './utils';
     }
     if (pmCsvRequest && userTraceCsvRequest) {
       disableFileChoosers();
-      UIProcessor.switchToProgressSpinner();
-      run([pmCsvRequest, userTraceCsvRequest]);
+      UIProcessor.displayProgressSpinner();
+      UIProcessor.displayMainContent();
+      setTimeout(function () {
+        run([pmCsvRequest, userTraceCsvRequest]);
+      }, 500);
     }
   }
 
@@ -144,6 +148,9 @@ import { UIProcessor } from './utils';
         }
       },
       bindto: '#' + containerId,
+      size: {
+        height: CHART_HEIGHT
+      },
       zoom: {
         enabled: true
       }
@@ -203,7 +210,7 @@ import { UIProcessor } from './utils';
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
       var pmInput = createInputElement(pmId, 'trendChartPM', pmId === constants.DEFAULT_TREND_CHART_PM_ID);
       var labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
-      var pmLabel = createLabelElement(pmId, labelText, 'form-check-label');
+      var pmLabel = UIProcessor.createLabelElement(pmId, labelText, 'form-check-label');
       var trendChartRBtnsDiv = document.querySelector('#' + constants.TREND_CHART_R_BTNS_DIV_ID);
       var inputGroupContainer = document.createElement('div');
       inputGroupContainer.setAttribute('class', 'form-check form-check-inline');
@@ -230,38 +237,11 @@ import { UIProcessor } from './utils';
   }
 
   function appendElapTimeInputForTrendChart () {
-    var elapTimeInputId = 'elapseTimeInput';
-    var elapTimeInput = createNumberInput();
-    var elapTimeLabel = createLabelElement(elapTimeInputId, 'Minimum seconds between events:');
-
-    var inputContainer = document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID);
-    inputContainer.appendChild(elapTimeLabel);
-    inputContainer.appendChild(elapTimeInput);
-
-    elapTimeInput.addEventListener('change', function (e) {
-      updateTrendChartSegments(parseInt(this.value));
+    var elapTimeInput = UIProcessor.createElapTimeInputForSegments(function (newValue) {
+      updateTrendChartSegments(parseInt(newValue));
     });
-
-    function createNumberInput (id) {
-      var elapTimeInput = document.createElement('input');
-      elapTimeInput.setAttribute('id', id);
-      elapTimeInput.setAttribute('class', 'form-control');
-      elapTimeInput.setAttribute('type', 'number');
-      elapTimeInput.setAttribute('step', 10);
-      elapTimeInput.setAttribute('min', 0);
-      elapTimeInput.setAttribute('value', constants.DEFAULT_SEGMENT_DISTANCE);
-      return elapTimeInput;
-    }
-  }
-
-  function createLabelElement (id, labelText, className) {
-    var labelEl = document.createElement('label');
-    labelEl.setAttribute('for', id);
-    labelEl.innerHTML = labelText;
-    if (className) {
-      labelEl.setAttribute('class', className);
-    }
-    return labelEl;
+    var inputContainer = document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID);
+    inputContainer.appendChild(elapTimeInput);
   }
 
   function updateTrendChartSegments (segmentDistance) {

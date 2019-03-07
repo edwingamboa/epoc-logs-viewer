@@ -64,13 +64,19 @@ class UIProcessor {
     this.hideElement(mainContentDiv);
   }
 
-  static displayProgressSpinner () {
-    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
+  static displayProgressSpinner (id) {
+    if (!id) {
+      id = constants.PROGRESS_SPINNER_ID;
+    }
+    let progressSpinner = document.querySelector('#' + id);
     this.displayElement(progressSpinner);
   }
 
-  static hideProgressSpinner () {
-    let progressSpinner = document.querySelector('#' + constants.PROGRESS_SPINNER_ID);
+  static hideProgressSpinner (id) {
+    if (!id) {
+      id = constants.PROGRESS_SPINNER_ID;
+    }
+    let progressSpinner = document.querySelector('#' + id);
     this.hideElement(progressSpinner);
   }
 
