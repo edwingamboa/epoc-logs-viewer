@@ -1,6 +1,6 @@
 import * as ss from 'simple-statistics';
 import { CsvProcessor, DateProcessor, PmProcessor } from './utils';
-import { pmLogsInfo } from './constants';
+import { pmLogsInfo, TREND_DATA_HEAD_ROW } from './constants';
 
 const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
 
@@ -100,7 +100,7 @@ class PerformanceMeasuresTrace {
         this.addSegment(relEngChangeVals, segment, pmId);
       }
     }.bind(this));
-    return [['TimeStamp', 'Relative Change', 'Trend']].concat(relEngChangeVals);
+    return TREND_DATA_HEAD_ROW.concat(relEngChangeVals);
   }
 
   addIndexesToSegments (segments, pmList, timeColumnIndex) {
@@ -211,6 +211,7 @@ class PerformanceMeasuresTrace {
         jointSegmentsInfo.push(segmentInfo);
       }
     }.bind(this));
+    console.log(jointSegmentsInfo);
     return jointSegmentsInfo;
   }
 
@@ -237,11 +238,20 @@ class PerformanceMeasuresTrace {
       spentTime += segmentInfo.spentTime;
     }.bind(this));
 
+    // segmentTrendData
+    segmentTrendData = segmentTrendData.map(function (row) {
+      return row.slice(0, 2);
+    });
+    jointSegmentsInfo.trendData = segmentTrendData;
+
     // isDesired property
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
     let initTrendValue = trendFunction(segmentTrendData[0][0]);
     let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
     jointSegmentsInfo.isDesired = this.isDesired(pmId, initTrendValue, finishTrendValue);
+    // segmentTrendData - setTrendPoints
+    jointSegmentsInfo.trendData[0][2] = initTrendValue;
+    jointSegmentsInfo.trendData[segmentTrendData.length - 1][2] = finishTrendValue;
     // meanPmValue property
     const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     jointSegmentsInfo.meanPmValue = this.meanOfData(segmentData, columnIndex);

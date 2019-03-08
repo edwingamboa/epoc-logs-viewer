@@ -1,5 +1,6 @@
 export const EPOC_MEASURES_CONTAINER_ID = 'measuresViewer';
 export const TRENDS_VIEWER_CONTAINER_ID = 'trendsViewer';
+export const SEGMENTS_VIEWER_CONTAINER_ID = 'segmentsViewer';
 export const PM_FILE_INPUT_ID = 'pmFileUrl';
 export const UT_FILE_INPUT_ID = 'userTraceFileUrl';
 export const LOGS_FILE_INPUT_ID = 'logsUrl';
@@ -12,6 +13,7 @@ export const PROGRESS_SPINNER_ID = 'progressSpinner';
 export const ADD_FILE_BUTTON_ID = 'addTraces';
 export const CURRENT_PM_GROUP_NAME = 'currentPm';
 export const CURRENT_PM_SELECTION_DIV_ID = 'currentPmSelectionDiv';
+export const TREND_DATA_HEAD_ROW = [['TimeStamp', 'Relative Change', 'Trend']];
 export const DEFAULT_SEGMENT_DISTANCE = 1;
 export const epocEventsData = {
   '1': 'Eyes opened start',

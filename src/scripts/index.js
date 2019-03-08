@@ -51,6 +51,20 @@ import { UIProcessor } from './utils';
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines
         );
+
+        var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(constants.DEFAULT_PM_ID);
+        jointSegmentsInfo.forEach(function (jointSegmentInfo) {
+          d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
+            .append('div')
+            .append('h4')
+            .text(jointSegmentInfo.segment.action)
+            .append('div')
+            .attr('id', jointSegmentInfo.segment.action)
+          addChart(
+            constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
+            jointSegmentInfo.segment.action
+          );
+        });
         resetFileChoosers();
         updateLoadedFilesText(responses[0].filename + '; ' + responses[1].filename);
         if (firstRun) {
