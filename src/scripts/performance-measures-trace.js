@@ -10,11 +10,19 @@ class PerformanceMeasuresTrace {
   }
 
   update (csv, segments, desiredPms) {
-    this.segmentsInfo = [];
+    this.initSegmentsInfoMap(desiredPms);
     this.segments = segments;
     this.updateLogs(CsvProcessor.extractLines(csv));
     this.updatePerformanceMeasures(desiredPms);
     this.updateTrendData(desiredPms);
+  }
+  
+  initSegmentsInfoMap (desiredPms) {
+    desiredPms = desiredPms || pmLogsInfo.get('pmIds');
+    this.segmentsInfo = new Map();
+    desiredPms.forEach(function (pmId) {
+      this.segmentsInfo.set(pmId, []);
+    }.bind(this));
   }
 
   updateLogs (logs) {
@@ -139,8 +147,14 @@ class PerformanceMeasuresTrace {
       let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
       this.addTrendPointsToSegment(
         relativeChangeData,
+        initTrendValue,
+        finishTrendValue,
         segment.initIndex,
         segmentFinalIndex,
+      );
+
+      segmentTrendData = this.addTrendPointsToSegment(
+        segmentTrendData,
         initTrendValue,
         finishTrendValue
       );
@@ -156,9 +170,10 @@ class PerformanceMeasuresTrace {
         meanPmValue: this.meanOfData(segmentData, columnIndex),
         maxPmValue: this.maxOfData(segmentData, columnIndex),
         minPmValue: this.minOfData(segmentData, columnIndex),
-        spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime)
+        spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime),
+        trendData: segmentTrendData
       };
-      this.segmentsInfo.push(segmentInfo);
+      this.segmentsInfo.get(pmId).push(segmentInfo);
     }
   }
 
@@ -194,10 +209,10 @@ class PerformanceMeasuresTrace {
   getJointSegmentsInfo (pmId) {
     let jointSegmentsActions = [];
     let jointSegmentsInfo = [];
-    this.segmentsInfo.forEach(function (segmentInfo, i) {
+    this.segmentsInfo.get(pmId).forEach(function (segmentInfo, i) {
       let segmentsToJoin = [ segmentInfo ];
       let action = segmentInfo.segment.action;
-      this.segmentsInfo.forEach(function (segmentInfoToCompare, j) {
+      this.segmentsInfo.get(pmId).forEach(function (segmentInfoToCompare, j) {
         if (i !== j && segmentInfo.segment.action ===
           segmentInfoToCompare.segment.action &&
           jointSegmentsActions.indexOf(action) < 0) {
@@ -211,7 +226,6 @@ class PerformanceMeasuresTrace {
         jointSegmentsInfo.push(segmentInfo);
       }
     }.bind(this));
-    console.log(jointSegmentsInfo);
     return jointSegmentsInfo;
   }
 
@@ -272,9 +286,13 @@ class PerformanceMeasuresTrace {
     return jointSegmentsInfo;
   }
 
-  addTrendPointsToSegment (trendData, segmentInitIndex, segmentFinalIndex, initTrendValue, finishTrendValue) {
+  addTrendPointsToSegment (trendData, initTrendValue, finishTrendValue, segmentInitIndex, segmentFinalIndex) {
+    segmentInitIndex = !segmentInitIndex ? 0: segmentInitIndex;
+    segmentFinalIndex = !segmentFinalIndex ? trendData.length - 1: segmentFinalIndex;
+
     trendData[segmentInitIndex][2] = initTrendValue;
     trendData[segmentFinalIndex][2] = finishTrendValue;
+    return trendData;
   }
 
   relativePmChange (currentPm, initialPm) {

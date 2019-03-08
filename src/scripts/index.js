@@ -53,6 +53,7 @@ import { UIProcessor } from './utils';
         );
 
         var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(constants.DEFAULT_PM_ID);
+        console.log(jointSegmentsInfo);
         jointSegmentsInfo.forEach(function (jointSegmentInfo) {
           d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
             .append('div')
