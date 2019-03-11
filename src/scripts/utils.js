@@ -196,7 +196,8 @@ class PmProcessor {
 
   static getNotDesiredAdjective (pmId) {
     if (constants.pmLogsInfo.get(pmId).desiredAdjective.indexOf('Not ') > -1) {
-      return constants.pmLogsInfo.get(pmId).desiredAdjective.replace('Not ', '');
+      let adjective = constants.pmLogsInfo.get(pmId).desiredAdjective.replace('Not ', '');
+      return adjective.charAt(0).toUpperCase() + adjective.substring(1);
     }
     return 'Not ' + constants.pmLogsInfo.get(pmId).desiredAdjective.toLowerCase();
   }
