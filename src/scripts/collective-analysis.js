@@ -89,7 +89,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         generateChartObjectForScatter(scatterColumns, scatterChartId)
       ),
       userIds: [],
-      spentTimes: []
+      spentTimes: [],
+      excludedDueToConstantPmUserIds: []
     };
     return segmentChartsData;
   }
@@ -271,6 +272,13 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     }
   }
 
+  function addExcludedToConstantPmUser (segmentInfo, userId) {
+    let segmentName = segmentInfo.segment.action;
+    if (segmentsChartsData.has(segmentName)) {
+      segmentsChartsData.get(segmentName).excludedDueToConstantPmUserIds.push(userId);
+    }
+  }
+
   function updateBarChartsData (segmentInfo) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
@@ -339,13 +347,19 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let missingUsers = missingUsersOfSegment(segmentName);
     if (missingUsers.length > 0) {
       details.push({
-        label: 'Users who missed the segment: ',
+        label: 'Participants who skipped the segment: ',
         value: segmentData.totalUsers === 0 ? 'All' : missingUsers.join(', ')
+      });
+    }
+    if (segmentData.excludedDueToConstantPmUserIds.length > 0) {
+      details.push({
+        label: 'Participants excluded due to constant measure: ',
+        value: segmentData.excludedDueToConstantPmUserIds.join(', ')
       });
     }
     if (segmentData.spentTimes.length > 0) {
       details.push({
-        label: 'Mean users\' spent time (HH:MM:SS): ',
+        label: 'Mean participants\' spent time (HH:MM:SS): ',
         value: DateProcessor.secondsToHHMMSS((ss.mean(segmentData.spentTimes)))
       });
     }
@@ -365,7 +379,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let segmentData = segmentsChartsData.get(segmentName);
     let missingUsers = [];
     for (let userId of performanceMeasuresData.keys()) {
-      if (segmentData.userIds.indexOf(userId) < 0) {
+      if (segmentData.userIds.indexOf(userId) < 0 && 
+      segmentData.excludedDueToConstantPmUserIds.indexOf(userId) < 0) {
         missingUsers.push(userId);
       }
     }
@@ -414,7 +429,11 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       eventsTrace = new EventsTrace(data, segmentDistance);
       performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
       performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
-        addUserTraceToData(segmentInfo, userId);
+        if (segmentInfo.pmIsConstant) {
+          addExcludedToConstantPmUser(segmentInfo, userId);
+        } else {
+          addUserTraceToData(segmentInfo, userId);
+        }
       });
     });
     updateAllCharts();

@@ -173,6 +173,9 @@ class PerformanceMeasuresTrace {
         spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime),
         trendData: segmentTrendData
       };
+      if (segmentInfo.minPmValue === segmentInfo.maxPmValue) {
+        segmentInfo.pmIsConstant = true;
+      }
       this.segmentsInfo.get(pmId).push(segmentInfo);
     }
   }
