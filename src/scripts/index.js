@@ -67,6 +67,8 @@ import { UIProcessor } from './utils';
           appendRBtnsForTrendChart();
           appendElapTimeInputForTrendChart();
           firstRun = false;
+        } else {
+          UIProcessor.changeValueOfRadioBtsToSelectPm(constants.DEFAULT_PM_ID);
         }
         UIProcessor.hideProgressSpinner();
       })
@@ -249,7 +251,7 @@ import { UIProcessor } from './utils';
   }
   function appendRBtnsForTrendChart () {
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
-      var pmInput = createInputElement(pmId, 'trendChartPM', pmId === constants.DEFAULT_PM_ID);
+      var pmInput = createInputElement(pmId, constants.CURRENT_PM_GROUP_NAME, pmId === constants.DEFAULT_PM_ID);
       var labelText = pmId + ' ' + constants.pmLogsInfo.get(pmId).verbose;
       var pmLabel = UIProcessor.createLabelElement(pmId, labelText, 'form-check-label');
       var trendChartRBtnsDiv = document.querySelector('#' + constants.TREND_CHART_R_BTNS_DIV_ID);
@@ -271,7 +273,9 @@ import { UIProcessor } from './utils';
         inputEl.setAttribute('checked', checked);
       }
       inputEl.addEventListener('change', function (e) {
-        changeCurrentPm(this.value);
+        setTimeout(function () {
+          changeCurrentPm(this.value);
+        }.bind(this), 500);
       });
       return inputEl;
     }

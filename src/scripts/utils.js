@@ -128,6 +128,21 @@ class UIProcessor {
     return labelEl;
   }
 
+  static changeValueOfRadioButtonGroup (value, groupName) {
+    let groupSelector = `[name="${groupName}"]`;
+    let valueSelector = `[value="${value}"]`;
+    document.querySelector(`${groupSelector}${valueSelector}`).checked = true;
+    document.querySelector(`${groupSelector}${valueSelector}`).setAttribute('checked', 'checked');
+    document.querySelector(`${groupSelector}`).value = value;
+  }
+
+  static changeValueOfRadioBtsToSelectPm (pmId, groupName) {
+    if (!groupName) {
+      groupName = constants.CURRENT_PM_GROUP_NAME;
+    }
+    this.changeValueOfRadioButtonGroup(pmId, groupName);
+  }
+
   static createRadioBtsToSelectPm (changeCallBack, groupName) {
     if (!groupName) {
       groupName = constants.CURRENT_PM_GROUP_NAME;
