@@ -286,6 +286,10 @@ class PerformanceMeasuresTrace {
       details: segmentsInfo[0].segment.details
     };
 
+    if (jointSegmentsInfo.minPmValue === jointSegmentsInfo.maxPmValue) {
+      jointSegmentsInfo.pmIsConstant = true;
+    }
+
     return jointSegmentsInfo;
   }
 
