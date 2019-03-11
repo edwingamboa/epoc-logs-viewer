@@ -33,6 +33,7 @@ import { UIProcessor } from './utils';
   function run (requests) {
     Promise.all(requests)
       .then(function (responses) {
+        clearSegmentChartsContainer();
         eventsTrace = new EventsTrace(responses[1].data);
         performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
 
@@ -53,14 +54,8 @@ import { UIProcessor } from './utils';
         );
 
         var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(constants.DEFAULT_PM_ID);
-        console.log(jointSegmentsInfo);
         jointSegmentsInfo.forEach(function (jointSegmentInfo) {
-          d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
-            .append('div')
-            .append('h4')
-            .text(jointSegmentInfo.segment.action)
-            .append('div')
-            .attr('id', jointSegmentInfo.segment.action)
+          addDivForSegmentChart(jointSegmentInfo.segment.action);
           addChart(
             constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
             jointSegmentInfo.segment.action
@@ -112,6 +107,21 @@ import { UIProcessor } from './utils';
     });
   }
 
+  function addDivForSegmentChart (segmentAction) {
+    if (d3.select('#' + segmentAction).empty()) {
+      d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
+      .append('div')
+      .append('h4')
+      .text(segmentAction)
+      .append('div')
+      .attr('id', segmentAction);
+    }
+  }
+
+  function clearSegmentChartsContainer () {
+    d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID).html('');
+  }
+
   function disableFileChoosers () {
     pmFileInput.setAttribute('disabled', true);
     userTraceFileInput.setAttribute('disabled', true);
@@ -130,6 +140,22 @@ import { UIProcessor } from './utils';
 
   function updateLoadedFilesText (text) {
     loadedFilesTextElement.innerHTML = text;
+  }
+
+  function changeCurrentPm (pmId) {
+    changeDataOfTrendChart(pmId);
+    updateSegmentCharts(pmId);
+  }
+
+  function updateSegmentCharts (pmId) {
+    var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(pmId);
+    jointSegmentsInfo.forEach(function (jointSegmentInfo) {
+      addDivForSegmentChart(jointSegmentInfo.segment.action);
+      addChart(
+        constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
+        jointSegmentInfo.segment.action
+      );
+    });
   }
 
   function changeDataOfTrendChart (pmId, onloaded) {
@@ -245,7 +271,7 @@ import { UIProcessor } from './utils';
         inputEl.setAttribute('checked', checked);
       }
       inputEl.addEventListener('change', function (e) {
-        changeDataOfTrendChart(this.value);
+        changeCurrentPm(this.value);
       });
       return inputEl;
     }
