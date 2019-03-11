@@ -1,5 +1,5 @@
 import { CsvProcessor, DateProcessor } from './utils';
-import { linkEvents, DEFAULT_SEGMENT_DISTANCE } from './constants';
+import { segmentsOfInterest, DEFAULT_SEGMENT_DISTANCE } from './constants';
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -7,12 +7,7 @@ const traceLogsInfo = new Map([
   ['timestamp', { initCol: 2 }],
   ['msElapsedSinceLastEvent', { initCol: 3 }],
   ['action', { initCol: 4 }],
-  ['actionD1', {
-    initCol: 5,
-    values: {
-      link: linkEvents
-    }
-  }],
+  ['actionD1', { initCol: 5 }],
   ['actionD2', { initCol: 6 }],
   ['actionD3', { initCol: 7 }]
 ]);
@@ -38,9 +33,8 @@ class EventsTrace {
 
   updateSegmentsDistance (segmentDistance) {
     this.segments = this.extractSegmentsFromEvents(
-      traceLogsInfo.get('actionD1').values.link,
+      segmentsOfInterest,
       traceLogsInfo.get('timestamp').initCol,
-      traceLogsInfo.get('actionD1').initCol,
       segmentDistance || DEFAULT_SEGMENT_DISTANCE
     );
   }
@@ -61,31 +55,44 @@ class EventsTrace {
     return events;
   }
 
-  extractSegmentsFromEvents (eventsOfInterest, columnOfTime, columnOfEvent, minElapsedSeconds) {
+  generateSegmentAction (columns) {
+    let columnOfEvent = traceLogsInfo.get('actionD1').initCol;
+    let columnOfEventSuffix = traceLogsInfo.get('actionD2').initCol;
+    let segmentAction = columns[columnOfEvent];
+    if (columns.length >= (columnOfEventSuffix + 1) &&
+      columns[columnOfEventSuffix] !== '') {
+      segmentAction += `_${columns[columnOfEventSuffix]}`;
+    }
+    return segmentAction;
+  }
+
+  extractSegmentsFromEvents (eventsOfInterest, columnOfTime, minElapsedSeconds) {
     var segments = [];
     var lastSegmentInitTime;
     var lastSegmentAction;
     var currentSegmentInitTime;
     var columns;
+    let segmentAction;
     this.logs.forEach(function (line, index) {
       if (line !== '' && index > 0) {
         line = line.replace(/\r?\n|\r/, '');
         columns = CsvProcessor.getColumnsOfCsvLine(line, ';');
-        if (eventsOfInterest.indexOf(columns[columnOfEvent]) > -1) {
+        segmentAction = this.generateSegmentAction(columns);
+        if (eventsOfInterest.indexOf(segmentAction) > -1) {
           currentSegmentInitTime = new Date(columns[columnOfTime]);
           if (!lastSegmentInitTime) {
             lastSegmentInitTime = currentSegmentInitTime;
-            lastSegmentAction = columns[columnOfEvent];
+            lastSegmentAction = segmentAction;
           }
           if (lastSegmentInitTime &&
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
             segments.push(new Segment(lastSegmentInitTime, currentSegmentInitTime, lastSegmentAction));
             lastSegmentInitTime = currentSegmentInitTime;
-            lastSegmentAction = columns[columnOfEvent];
+            lastSegmentAction = segmentAction;
           };
         }
       }
-    });
+    }.bind(this));
     // Add last identified segment
     let lastSegmentFinishTime = new Date(columns[columnOfTime]);
     segments.push(new Segment(lastSegmentInitTime, lastSegmentFinishTime, lastSegmentAction));

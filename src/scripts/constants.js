@@ -50,20 +50,6 @@ export const pmLogsInfo = new Map([
   ['pmIds', ['SCA_ENG', 'SCA_VAL', 'SCA_MED', 'SCA_FRU', 'SCA_FOC', 'SCA_EXC', 'SCA_LEX']]
 ]);
 
-export const linkEvents = [
-  'Link_Orientierung_xpage',
-  'Link_Theorie_xpage',
-  'Link_Grundprinzip_xpage',
-  'Link_Berechnung_xpage',
-  'Link_Raue_Oberflächen_xpage',
-  'Link_Anwendung_xpage',
-  'Link_FAQ_xpage',
-  'Link_Zusammenfassung_xpage',
-  'Link_Wiederholungsfragen_xpage',
-  'Link_Quellen_xpage',
-  'Link_Instruktion_xpage'
-];
-
 export const segmentsOfInterest = [
   'Link_Orientierung_xpage',
   'Link_Theorie_xpage',
@@ -75,5 +61,12 @@ export const segmentsOfInterest = [
   'Link_Zusammenfassung_xpage',
   'Link_Wiederholungsfragen_xpage',
   'Link_Quellen_xpage',
-  'Link_Instruktion_xpage'
+  'Link_Instruktion_xpage',
+  'task_Formel',
+  'task_Begriffe',
+  'task_Reihenfolge',
+  'task_Lueckentext',
+  'task_Hangman',
+  'task_Quiz',
+  'task_Theorie'
 ];
