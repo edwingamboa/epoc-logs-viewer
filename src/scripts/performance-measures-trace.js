@@ -239,7 +239,7 @@ class PerformanceMeasuresTrace {
     let segment;
     let jointSegmentsInfo = {};
     let maxPmValue = 0;
-    let minPmValue = 0;
+    let minPmValue = 1;
     let spentTime = 0;
     segmentsInfo.forEach(function (segmentInfo) {
       segment = segmentInfo.segment;
