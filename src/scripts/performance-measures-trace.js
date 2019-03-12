@@ -241,6 +241,7 @@ class PerformanceMeasuresTrace {
     let maxPmValue = 0;
     let minPmValue = 1;
     let spentTime = 0;
+    let spentTimes = [];
     segmentsInfo.forEach(function (segmentInfo) {
       segment = segmentInfo.segment;
       segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
@@ -253,6 +254,7 @@ class PerformanceMeasuresTrace {
         minPmValue = segmentInfo.minPmValue;
       }
       spentTime += segmentInfo.spentTime;
+      spentTimes.push(spentTime);
     }.bind(this));
 
     // segmentTrendData
@@ -278,6 +280,8 @@ class PerformanceMeasuresTrace {
     jointSegmentsInfo.minPmValue = minPmValue;
     // spentTime property
     jointSegmentsInfo.spentTime = spentTime;
+    // spentTimes property
+    jointSegmentsInfo.spentTimes = spentTimes;
     // meanChangeValue property
     jointSegmentsInfo.meanChangeValue = this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
     // segment property
