@@ -36,16 +36,15 @@ import { UIProcessor } from './utils';
         clearSegmentChartsContainer();
         eventsTrace = new EventsTrace(responses[1].data);
         performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
+        var eventsOfInterestGridLines = parseUserTraceAsGridLines(eventsTrace.segments);
 
-        var userTraceEventsLines = parseUserTraceAsGridLines(eventsTrace.events);
         addChart(
           performanceMeasuresTrace.getData(true),
           constants.EPOC_MEASURES_CONTAINER_ID,
-          userTraceEventsLines,
+          eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines
         );
 
-        var eventsOfInterestGridLines = parseUserTraceAsGridLines(eventsTrace.segments);
         trendsChart = addChart(
           performanceMeasuresTrace.getTrendData(constants.DEFAULT_PM_ID, true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
