@@ -28,6 +28,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   const numberOfDecimalsForPercentages = 2;
   const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
   const SUFFIX_TITLE_ID = 'suffixTitle';
+  const CHARTS_SPINNER_ID = 'chartsProgressSpinner';
 
   addSetUpUIElements();
 
@@ -35,7 +36,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     addElapTimeInputForSegments();
     updateCurrentPmInResultsTitle();
     document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
-      UIProcessor.displayProgressSpinner();
+      UIProcessor.displayProgressSpinner(CHARTS_SPINNER_ID);
       updateCurrentPmInResultsTitle();
       setTimeout(updateUserTraces, 500);
     });
@@ -401,7 +402,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
             eventsTracesData.set(response.fileNameData.userId, response.data);
           }
         });
-        updateUserTraces();
+        updateUserTraces(true);
         resetFileChoosers();
         updateNumberOfUsersText(getTotalNumberOfUsers());
       })
@@ -422,7 +423,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     d3.select('#' + SUFFIX_TITLE_ID).text(PmProcessor.generateVerboseOfPm(currentPm));
   }
 
-  function updateUserTraces () {
+  function updateUserTraces (isReset) {
     cleanChartsContainer();
     initMetaDataMapForSegmentsOfInterest();
     let eventsTrace;
@@ -439,7 +440,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       });
     });
     updateAllCharts();
-    UIProcessor.hideProgressSpinner();
+    let spinnerToHide = isReset ? constants.MAIN_PROGRESS_SPINNER_ID : CHARTS_SPINNER_ID;
+    UIProcessor.hideProgressSpinner(spinnerToHide);
   }
 
   function extractDataOfFileName (fileName) {
