@@ -1,8 +1,10 @@
 import * as ss from 'simple-statistics';
-import { CsvProcessor, DateProcessor, PmProcessor } from './utils';
-import { pmLogsInfo, TREND_DATA_HEAD_ROW } from './constants';
+import { CsvProcessor, DateProcessor, PmProcessor, DataProcessor } from './utils';
+import { pmLogsInfo } from './constants';
+import { Segment } from './events-trace';
 
 const CHANGE_VAL_INDEX_IN_TREND_DATA = 1;
+const RELATIVE_CHANGE_DATA_HEAD_ROW = [['TimeStamp', 'Relative Change']];
 
 class PerformanceMeasuresTrace {
   constructor (csv, segments) {
@@ -108,7 +110,7 @@ class PerformanceMeasuresTrace {
         this.addSegment(relEngChangeVals, segment, pmId);
       }
     }.bind(this));
-    return TREND_DATA_HEAD_ROW.concat(relEngChangeVals);
+    return RELATIVE_CHANGE_DATA_HEAD_ROW.concat(relEngChangeVals);
   }
 
   addIndexesToSegments (segments, pmList, timeColumnIndex) {
@@ -132,7 +134,8 @@ class PerformanceMeasuresTrace {
   addSegment (relativeChangeData, segment, pmId) {
     let segmentFinalIndex = segment.finishIndex || relativeChangeData.length - 1;
     let initTime;
-    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1).map(function (data) {
+    let segmentTrendData = relativeChangeData.slice(segment.initIndex, segmentFinalIndex + 1)
+    let segmentTrendDataInSeconds = segmentTrendData.map(function (data) {
       if (!initTime) {
         initTime = data[0];
       }
@@ -142,71 +145,24 @@ class PerformanceMeasuresTrace {
       return newData;
     });
     if (segmentTrendData.length > 1) {
-      let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
-      let initTrendValue = trendFunction(segmentTrendData[0][0]);
-      let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
-      this.addTrendPointsToSegment(
-        relativeChangeData,
-        initTrendValue,
-        finishTrendValue,
-        segment.initIndex,
-        segmentFinalIndex,
-      );
-
+      let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendDataInSeconds));
+      let initTrendValue = trendFunction(segmentTrendDataInSeconds[0][0]);
+      let finishTrendValue = trendFunction(segmentTrendDataInSeconds[segmentTrendData.length - 1][0]);
       segmentTrendData = this.addTrendPointsToSegment(
         segmentTrendData,
         initTrendValue,
         finishTrendValue
       );
 
-      const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
+      const pmColumnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
 
       let segmentData = this.getData().slice(segment.initIndex, segmentFinalIndex + 1);
-
-      let segmentInfo = {
-        segment: segment,
-        isDesired: this.isDesired(pmId, initTrendValue, finishTrendValue),
-        meanChangeValue: this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA),
-        meanPmValue: this.meanOfData(segmentData, columnIndex),
-        maxPmValue: this.maxOfData(segmentData, columnIndex),
-        minPmValue: this.minOfData(segmentData, columnIndex),
-        spentTime: DateProcessor.elapsedSeconds(segment.time, segment.finishTime),
-        trendData: segmentTrendData
-      };
-      if (segmentInfo.minPmValue === segmentInfo.maxPmValue) {
-        segmentInfo.pmIsConstant = true;
-      }
+      let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
+      let changeValues = DataProcessor.getColumnOfData(segmentData, CHANGE_VAL_INDEX_IN_TREND_DATA);
+      
+      let segmentInfo = new SegmentInfo(segment, initTrendValue, finishTrendValue, pmValues, changeValues, segmentTrendData, pmId);
       this.segmentsInfo.get(pmId).push(segmentInfo);
     }
-  }
-
-  isDesired (pmId, initRelEngChange, finishRelEngChange) {
-    let positiveTrend = (finishRelEngChange - initRelEngChange) > 0;
-    return !PmProcessor.isNegativeConnoted(pmId) ? positiveTrend : !positiveTrend;
-  }
-
-  meanOfData (segmentData, valueIndex) {
-    return ss.mean(this.getColumnOfData(segmentData, valueIndex));
-  }
-
-  maxOfData (segmentData, valueIndex) {
-    return ss.max(this.getColumnOfData(segmentData, valueIndex));
-  }
-
-  minOfData (segmentData, valueIndex) {
-    return ss.min(this.getColumnOfData(segmentData, valueIndex));
-  }
-
-  getColumnOfData (data, columnIndex) {
-    let values = [];
-    data.forEach(function (data) {
-      let value = data[columnIndex];
-      if (typeof value === 'string') {
-        value = parseFloat(value);
-      }
-      values.push(value);
-    });
-    return values;
   }
 
   getJointSegmentsInfo (pmId) {
@@ -236,23 +192,12 @@ class PerformanceMeasuresTrace {
     let segmentTrendData = [];
     let segmentData = [];
     let segmentFinalIndex;
-    let segment;
-    let jointSegmentsInfo = {};
-    let maxPmValue = 0;
-    let minPmValue = 1;
-    let spentTime = 0;
     let spentTimes = [];
+    let spentTime = 0;
     segmentsInfo.forEach(function (segmentInfo) {
-      segment = segmentInfo.segment;
-      segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
-      segmentTrendData = segmentTrendData.concat(this.getTrendData(pmId).slice(segment.initIndex, segmentFinalIndex + 1));
-      segmentData = segmentData.concat(this.getData().slice(segment.initIndex, segmentFinalIndex + 1));
-      if (segmentInfo.maxPmValue > maxPmValue) {
-        maxPmValue = segmentInfo.maxPmValue;
-      }
-      if (segmentInfo.minPmValue < minPmValue) {
-        minPmValue = segmentInfo.minPmValue;
-      }
+      segmentFinalIndex = segmentInfo.segment.finishIndex || this.getData().length - 1;
+      segmentTrendData = segmentTrendData.concat(this.getTrendData(pmId).slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
+      segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
       spentTimes.push(spentTime);
     }.bind(this));
@@ -261,38 +206,21 @@ class PerformanceMeasuresTrace {
     segmentTrendData = segmentTrendData.map(function (row) {
       return row.slice(0, 2);
     });
-    jointSegmentsInfo.trendData = segmentTrendData;
-
-    // isDesired property
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
     let initTrendValue = trendFunction(segmentTrendData[0][0]);
     let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
-    jointSegmentsInfo.isDesired = this.isDesired(pmId, initTrendValue, finishTrendValue);
     // segmentTrendData - setTrendPoints
-    jointSegmentsInfo.trendData[0][2] = initTrendValue;
-    jointSegmentsInfo.trendData[segmentTrendData.length - 1][2] = finishTrendValue;
-    // meanPmValue property
-    const columnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
-    jointSegmentsInfo.meanPmValue = this.meanOfData(segmentData, columnIndex);
-    // maxPmValue property
-    jointSegmentsInfo.maxPmValue = maxPmValue;
-    // minPmValue property
-    jointSegmentsInfo.minPmValue = minPmValue;
-    // spentTime property
-    jointSegmentsInfo.spentTime = spentTime;
-    // spentTimes property
-    jointSegmentsInfo.spentTimes = spentTimes;
-    // meanChangeValue property
-    jointSegmentsInfo.meanChangeValue = this.meanOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
-    // segment property
-    jointSegmentsInfo.segment = {
-      action: segmentsInfo[0].segment.action,
-      details: segmentsInfo[0].segment.details
-    };
+    segmentTrendData[0][2] = initTrendValue;
+    segmentTrendData[segmentTrendData.length - 1][2] = finishTrendValue;
 
-    if (jointSegmentsInfo.minPmValue === jointSegmentsInfo.maxPmValue) {
-      jointSegmentsInfo.pmIsConstant = true;
-    }
+    const pmColumnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
+    let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
+    let changeValues = DataProcessor.getColumnOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
+    let segment = new Segment (segmentsInfo[0].segment.action);
+
+    let jointSegmentsInfo = new SegmentInfo(segment, initTrendValue, finishTrendValue, pmValues, changeValues, segmentTrendData, pmId);
+    jointSegmentsInfo.spentTime = spentTime;
+    jointSegmentsInfo.spentTimes = spentTimes;
 
     return jointSegmentsInfo;
   }
@@ -308,6 +236,32 @@ class PerformanceMeasuresTrace {
 
   relativePmChange (currentPm, initialPm) {
     return (currentPm - initialPm) / initialPm;
+  }
+}
+
+class SegmentInfo {
+  constructor(segment, initTrendValue, finishTrendValue, pmValues, changeValues, segmentTrendData, pmId) {
+    this.segment = segment;
+    this.initTrendValue = initTrendValue;
+    this.finishTrendValue = finishTrendValue;
+    if (segment.hasOwnProperty('time') && segment.hasOwnProperty('finishTime')) {
+      this.spentTime = DateProcessor.elapsedSeconds(segment.time, segment.finishTime);
+    }
+    this.pmId = pmId;
+    this.meanChangeValue = ss.mean(changeValues);
+    this.meanPmValue = ss.mean(pmValues);
+    this.maxPmValue = ss.max(pmValues),
+    this.minPmValue = ss.min(pmValues),
+    this.trendData = segmentTrendData;
+  }
+
+  isDesired() {
+    let positiveTrend = (this.finishTrendValue - this.initTrendValue) > 0;
+    return !PmProcessor.isNegativeConnoted(this.pmId) ? positiveTrend : !positiveTrend;
+  }
+
+  pmIsConstant () {
+    return this.minPmValue === this.maxPmValue;
   }
 }
 

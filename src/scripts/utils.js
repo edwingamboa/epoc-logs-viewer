@@ -221,4 +221,18 @@ class NumberProcessor {
   }
 }
 
-export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor, PmProcessor };
+class DataProcessor {
+  static getColumnOfData (data, columnIndex) {
+    let values = [];
+    data.forEach(function (data) {
+      let value = data[columnIndex];
+      if (typeof value === 'string') {
+        value = parseFloat(value);
+      }
+      values.push(value);
+    });
+    return values;
+  }
+}
+
+export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor, PmProcessor, DataProcessor };

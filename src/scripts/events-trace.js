@@ -86,7 +86,7 @@ class EventsTrace {
           }
           if (lastSegmentInitTime &&
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
-            segments.push(new Segment(lastSegmentInitTime, currentSegmentInitTime, lastSegmentAction));
+            segments.push(new Segment(lastSegmentAction, lastSegmentInitTime, currentSegmentInitTime));
             lastSegmentInitTime = currentSegmentInitTime;
             lastSegmentAction = segmentAction;
           };
@@ -95,18 +95,23 @@ class EventsTrace {
     }.bind(this));
     // Add last identified segment
     let lastSegmentFinishTime = new Date(columns[columnOfTime]);
-    segments.push(new Segment(lastSegmentInitTime, lastSegmentFinishTime, lastSegmentAction));
+    segments.push(new Segment(lastSegmentAction, lastSegmentInitTime, lastSegmentFinishTime));
     return segments;
   }
 }
 
 class Segment {
-  constructor (initTime, finishTime, action) {
-    this.time = initTime;
-    this.finishTime = finishTime;
+  constructor (action, initTime, finishTime) {
     this.action = action;
-    this.details = action + ':' + DateProcessor.extractTimeHHMMSS(initTime) +
-    ' - ' + DateProcessor.extractTimeHHMMSS(finishTime);
+    this.details = action + ' ';
+    if (initTime !== undefined) {
+      this.time = initTime;
+      this.details += DateProcessor.extractTimeHHMMSS(initTime) + ' - ';
+    }
+    if (finishTime !== undefined) {
+      this.finishTime = finishTime;
+      this.details += DateProcessor.extractTimeHHMMSS(finishTime);
+    }
   }
 }
 
@@ -118,4 +123,4 @@ class Event {
   }
 }
 
-export default EventsTrace;
+export { EventsTrace, Event, Segment };

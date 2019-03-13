@@ -6,7 +6,7 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
-import EventsTrace from './events-trace';
+import { EventsTrace } from './events-trace';
 import PerformanceMeasuresTrace from './performance-measures-trace';
 import { UIProcessor } from './utils';
 
@@ -49,9 +49,12 @@ import { UIProcessor } from './utils';
           performanceMeasuresTrace.getTrendData(constants.DEFAULT_PM_ID, true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
-          addDetailsToUserTraceGridLines
+          addDetailsToUserTraceGridLines,
+          null, 
+          true
         );
-
+        addTrendLinesToTrendChart(constants.DEFAULT_PM_ID);
+        
         var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(constants.DEFAULT_PM_ID);
         jointSegmentsInfo.forEach(function (jointSegmentInfo) {
           addDivForSegmentChart(jointSegmentInfo.segment.action);
@@ -59,6 +62,7 @@ import { UIProcessor } from './utils';
             constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
             jointSegmentInfo.segment.action
           );
+
         });
         resetFileChoosers();
         updateLoadedFilesText(responses[0].filename + '; ' + responses[1].filename);
@@ -144,7 +148,7 @@ import { UIProcessor } from './utils';
   }
 
   function changeCurrentPm (pmId) {
-    changeDataOfTrendChart(pmId);
+    updatePmInTrendChart(pmId);
     updateSegmentCharts(pmId);
   }
 
@@ -159,21 +163,39 @@ import { UIProcessor } from './utils';
     });
   }
 
-  function changeDataOfTrendChart (pmId, onloaded) {
+  function updatePmInTrendChart (pmId) {
+    let changeValueData = performanceMeasuresTrace.getData(true);
+    updateDataOfTrendChart(pmId, changeValueData, true);
+    addTrendLinesToTrendChart(pmId);
+  }
+
+  function addTrendLinesToTrendChart (pmId) {
+    performanceMeasuresTrace.segmentsInfo.get(pmId).forEach(function(segmentInfo, i) {        
+      let trendPointsData = [
+        ['TimeStamp', `Trend ${segmentInfo.segment.action} ${i}`],
+        [segmentInfo.segment.time, segmentInfo.initTrendValue],
+        [segmentInfo.segment.finishTime, segmentInfo.finishTrendValue]
+      ]
+      updateDataOfTrendChart(pmId, trendPointsData, false);
+    });
+  }
+
+  function updateDataOfTrendChart (pmId, rows, cleanChart, onloaded) {
     pmId = pmId || constants.DEFAULT_PM_ID;
-    var relativeChangeValsAndEvents = performanceMeasuresTrace.getTrendData(pmId, true);
     var loadData = {
-      rows: relativeChangeValsAndEvents,
-      x: 'TimeStamp',
-      unload: []
+      rows: rows,
+      x: 'TimeStamp'
     };
+    if (cleanChart) {
+      loadData.unload = [];
+    }
     if (onloaded) {
       loadData.done = onloaded;
     }
     trendsChart.load(loadData);
   }
 
-  function addChart (data, containerId, eventsMarks, onrendered, types) {
+  function addChart (data, containerId, eventsMarks, onrendered, types, hideLegend) {
     var chartProperties = {
       data: {
         rows: data,
@@ -209,6 +231,11 @@ import { UIProcessor } from './utils';
     }
     if (types) {
       chartProperties.data = data;
+    }
+    if (hideLegend) {
+      chartProperties.legend = {
+        show: false
+      };
     }
     return c3.generate(chartProperties);
   }
@@ -291,9 +318,6 @@ import { UIProcessor } from './utils';
   function updateTrendChartSegments (segmentDistance) {
     eventsTrace.updateSegmentsDistance(segmentDistance);
     updateTrendChartGrids();
-    changeDataOfTrendChart(null, function () {
-      trendsChart.flush();
-    });
   }
 
   function updateTrendChartGrids () {

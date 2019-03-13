@@ -1,7 +1,7 @@
 /* global FileReader */
 import '../styles/main_style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import EventsTrace from './events-trace';
+import { EventsTrace } from './events-trace';
 import PerformanceMeasuresTrace from './performance-measures-trace';
 import 'c3/c3.css';
 import * as d3 from 'd3';
@@ -223,8 +223,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     const defaultNumberOfVisits = 1
     const rowData = [
       {
-        squareColor: userData.segmentInfo.isDesired ? COLOR_CODES[POSITIVE_RESULT_INDEX] : COLOR_CODES[NEGATIVE_RESULT_INDEX],
-        value: userData.segmentInfo.isDesired ? PmProcessor.getDesiredAdjective(currentPm) : PmProcessor.getNotDesiredAdjective(currentPm)
+        squareColor: userData.segmentInfo.isDesired() ? COLOR_CODES[POSITIVE_RESULT_INDEX] : COLOR_CODES[NEGATIVE_RESULT_INDEX],
+        value: userData.segmentInfo.isDesired() ? PmProcessor.getDesiredAdjective(currentPm) : PmProcessor.getNotDesiredAdjective(currentPm)
       },
       { label: 'Mean ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.meanPmValue, numberOfDecimals) },
       { label: 'Max ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.maxPmValue, numberOfDecimals) },
@@ -284,7 +284,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   function updateBarChartsData (segmentInfo) {
     let segmentName = segmentInfo.segment.action;
     let segmentData = segmentsChartsData.get(segmentName);
-    let dataIndex = segmentInfo.isDesired ? POSITIVE_RESULT_INDEX : NEGATIVE_RESULT_INDEX;
+    let dataIndex = segmentInfo.isDesired() ? POSITIVE_RESULT_INDEX : NEGATIVE_RESULT_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
 
     segmentData.distributionData[POSITIVE_RESULT_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
@@ -306,7 +306,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let userData = {};
     userData.userId = userId;
     userData.segmentInfo = segmentInfo;
-    if (segmentInfo.isDesired) {
+    if (segmentInfo.isDesired()) {
       userData[PmProcessor.getDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
     } else {
       userData[PmProcessor.getNotDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
@@ -431,7 +431,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       eventsTrace = new EventsTrace(data, segmentDistance);
       performanceMeasuresTrace = new PerformanceMeasuresTrace(performanceMeasuresData.get(userId), eventsTrace.segments);
       performanceMeasuresTrace.getJointSegmentsInfo(currentPm).forEach(function (segmentInfo) {
-        if (segmentInfo.pmIsConstant) {
+        if (segmentInfo.pmIsConstant()) {
           addExcludedToConstantPmUser(segmentInfo, userId);
         } else {
           addUserTraceToData(segmentInfo, userId);

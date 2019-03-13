@@ -55,7 +55,7 @@ export const segmentsOfInterest = [
   'Link_Theorie_xpage',
   'Link_Grundprinzip_xpage',
   'Link_Berechnung_xpage',
-  'Link_Raue_Oberflächen_xpage',
+  'Link_Raue_Oberflaechen_xpage',
   'Link_Anwendung_xpage',
   'Link_FAQ_xpage',
   'Link_Zusammenfassung_xpage',
