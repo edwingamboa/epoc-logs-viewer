@@ -66,7 +66,7 @@ class UIProcessor {
 
   static displayProgressSpinner (id) {
     if (!id) {
-      id = constants.PROGRESS_SPINNER_ID;
+      id = constants.MAIN_PROGRESS_SPINNER_ID;
     }
     let progressSpinner = document.querySelector('#' + id);
     this.displayElement(progressSpinner);
@@ -74,7 +74,7 @@ class UIProcessor {
 
   static hideProgressSpinner (id) {
     if (!id) {
-      id = constants.PROGRESS_SPINNER_ID;
+      id = constants.MAIN_PROGRESS_SPINNER_ID;
     }
     let progressSpinner = document.querySelector('#' + id);
     this.hideElement(progressSpinner);

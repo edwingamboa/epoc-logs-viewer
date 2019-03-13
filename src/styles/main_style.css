@@ -1,4 +1,4 @@
-#progressSpinner {
+.progress-spinner {
   position: absolute;
   z-index: 999;
   height: 100%;
@@ -12,7 +12,7 @@
   background-color: #ffffff;
 }
 
-#mainContent {
+.spinner-container {
   position: relative;
 }
 

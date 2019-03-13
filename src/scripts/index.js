@@ -25,6 +25,7 @@ import { UIProcessor } from './utils';
   var segmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
   var lastSegmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
   var currentPm = constants.DEFAULT_PM_ID;
+  const TREND_PROGRESS_SPINNER_ID = 'trendProgressSpinner';
 
   pmFileInput.addEventListener('change', function (e) {
     handleFileLoading(e.target.files[0], 'pm');
@@ -35,7 +36,7 @@ import { UIProcessor } from './utils';
   });
 
   document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
-    //UIProcessor.displayProgressSpinner();
+    UIProcessor.displayProgressSpinner(TREND_PROGRESS_SPINNER_ID);
     if (lastSegmentDistance !== segmentDistance) {
       lastSegmentDistance = segmentDistance;
       updateTrendChartSegments(segmentDistance);
@@ -164,6 +165,7 @@ import { UIProcessor } from './utils';
     clearTrendChart(function () {
       updatePmInTrendChart();
       updateSegmentCharts();
+      UIProcessor.hideProgressSpinner(TREND_PROGRESS_SPINNER_ID);
     });
   }
 
