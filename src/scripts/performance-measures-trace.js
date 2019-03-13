@@ -42,7 +42,7 @@ class PerformanceMeasuresTrace {
     return this.dataWithHeadings.slice(1);
   }
 
-  getTrendData (pmId, withHeadings) {
+  getChangeValueData (pmId, withHeadings) {
     let trendDataWithHeadings = this.trendDataWithHeadings.get(pmId);
     if (withHeadings) {
       return trendDataWithHeadings;
@@ -196,7 +196,7 @@ class PerformanceMeasuresTrace {
     let spentTime = 0;
     segmentsInfo.forEach(function (segmentInfo) {
       segmentFinalIndex = segmentInfo.segment.finishIndex || this.getData().length - 1;
-      segmentTrendData = segmentTrendData.concat(this.getTrendData(pmId).slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
+      segmentTrendData = segmentTrendData.concat(this.getChangeValueData(pmId).slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
       spentTimes.push(spentTime);

@@ -46,7 +46,7 @@ import { UIProcessor } from './utils';
         );
 
         trendsChart = addChart(
-          performanceMeasuresTrace.getTrendData(constants.DEFAULT_PM_ID, true),
+          performanceMeasuresTrace.getChangeValueData(constants.DEFAULT_PM_ID, true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines,
@@ -164,7 +164,7 @@ import { UIProcessor } from './utils';
   }
 
   function updatePmInTrendChart (pmId) {
-    let changeValueData = performanceMeasuresTrace.getData(true);
+    let changeValueData = performanceMeasuresTrace.getChangeValueData(pmId, true);
     updateDataOfTrendChart(pmId, changeValueData, true);
     addTrendLinesToTrendChart(pmId);
   }
