@@ -21,6 +21,10 @@ import { UIProcessor } from './utils';
   var eventsTrace;
   var performanceMeasuresTrace;
   const CHART_HEIGHT = 300;
+  const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
+  var segmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
+  var lastSegmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
+  var currentPm = constants.DEFAULT_PM_ID;
 
   pmFileInput.addEventListener('change', function (e) {
     handleFileLoading(e.target.files[0], 'pm');
@@ -28,6 +32,15 @@ import { UIProcessor } from './utils';
 
   userTraceFileInput.addEventListener('change', function (e) {
     handleFileLoading(e.target.files[0], 'ut');
+  });
+
+  document.querySelector('#' + SET_UP_SUBMIT_EVENT_ID).addEventListener('click', function () {
+    //UIProcessor.displayProgressSpinner();
+    if (lastSegmentDistance !== segmentDistance) {
+      lastSegmentDistance = segmentDistance;
+      updateTrendChartSegments(segmentDistance);
+    }
+    setTimeout(changeCurrentPm, 500);
   });
 
   function run (requests) {
@@ -46,16 +59,16 @@ import { UIProcessor } from './utils';
         );
 
         trendsChart = addChart(
-          performanceMeasuresTrace.getChangeValueData(constants.DEFAULT_PM_ID, true),
+          performanceMeasuresTrace.getChangeValueData(currentPm, true),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines,
           null, 
           true
         );
-        addTrendLinesToTrendChart(constants.DEFAULT_PM_ID);
+        addTrendLinesToTrendChart();
         
-        var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(constants.DEFAULT_PM_ID);
+        var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(currentPm);
         jointSegmentsInfo.forEach(function (jointSegmentInfo) {
           addDivForSegmentChart(jointSegmentInfo.segment.action);
           addChart(
@@ -147,13 +160,15 @@ import { UIProcessor } from './utils';
     loadedFilesTextElement.innerHTML = text;
   }
 
-  function changeCurrentPm (pmId) {
-    updatePmInTrendChart(pmId);
-    updateSegmentCharts(pmId);
+  function changeCurrentPm () {
+    clearTrendChart(function () {
+      updatePmInTrendChart();
+      updateSegmentCharts();
+    });
   }
 
-  function updateSegmentCharts (pmId) {
-    var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(pmId);
+  function updateSegmentCharts () {
+    var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(currentPm);
     jointSegmentsInfo.forEach(function (jointSegmentInfo) {
       addDivForSegmentChart(jointSegmentInfo.segment.action);
       addChart(
@@ -163,25 +178,28 @@ import { UIProcessor } from './utils';
     });
   }
 
-  function updatePmInTrendChart (pmId) {
-    let changeValueData = performanceMeasuresTrace.getChangeValueData(pmId, true);
-    updateDataOfTrendChart(pmId, changeValueData, true);
-    addTrendLinesToTrendChart(pmId);
+  function clearTrendChart(onCleared) {
+    trendsChart.unload({ done: onCleared });
   }
 
-  function addTrendLinesToTrendChart (pmId) {
-    performanceMeasuresTrace.segmentsInfo.get(pmId).forEach(function(segmentInfo, i) {        
+  function updatePmInTrendChart () {
+    let changeValueData = performanceMeasuresTrace.getChangeValueData(currentPm, true);
+    updateDataOfTrendChart(changeValueData, true);
+    addTrendLinesToTrendChart();
+  }
+
+  function addTrendLinesToTrendChart () {
+    performanceMeasuresTrace.segmentsInfo.get(currentPm).forEach(function(segmentInfo, i) {        
       let trendPointsData = [
         ['TimeStamp', `Trend ${segmentInfo.segment.action} ${i}`],
         [segmentInfo.segment.time, segmentInfo.initTrendValue],
         [segmentInfo.segment.finishTime, segmentInfo.finishTrendValue]
       ]
-      updateDataOfTrendChart(pmId, trendPointsData, false);
+      updateDataOfTrendChart(trendPointsData, false);
     });
   }
 
-  function updateDataOfTrendChart (pmId, rows, cleanChart, onloaded) {
-    pmId = pmId || constants.DEFAULT_PM_ID;
+  function updateDataOfTrendChart (rows, cleanChart, onloaded) {
     var loadData = {
       rows: rows,
       x: 'TimeStamp'
@@ -300,7 +318,7 @@ import { UIProcessor } from './utils';
       }
       inputEl.addEventListener('change', function (e) {
         setTimeout(function () {
-          changeCurrentPm(this.value);
+          currentPm = this.value;
         }.bind(this), 500);
       });
       return inputEl;
@@ -309,7 +327,7 @@ import { UIProcessor } from './utils';
 
   function appendElapTimeInputForTrendChart () {
     var elapTimeInput = UIProcessor.createElapTimeInputForSegments(function (newValue) {
-      updateTrendChartSegments(parseInt(newValue));
+      segmentDistance = parseInt(newValue);
     });
     var inputContainer = document.querySelector('#' + constants.TOLERANCE_TIME_DIV_ID);
     inputContainer.appendChild(elapTimeInput);
@@ -317,6 +335,7 @@ import { UIProcessor } from './utils';
 
   function updateTrendChartSegments (segmentDistance) {
     eventsTrace.updateSegmentsDistance(segmentDistance);
+    performanceMeasuresTrace.updateSegments(eventsTrace.segments);
     updateTrendChartGrids();
   }
 

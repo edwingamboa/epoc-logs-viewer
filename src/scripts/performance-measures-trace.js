@@ -18,6 +18,12 @@ class PerformanceMeasuresTrace {
     this.updatePerformanceMeasures(desiredPms);
     this.updateTrendData(desiredPms);
   }
+
+  updateSegments (segments, desiredPms) {
+    this.segments = segments;
+    this.initSegmentsInfoMap(desiredPms);
+    this.updateTrendData(desiredPms);
+  }
   
   initSegmentsInfoMap (desiredPms) {
     desiredPms = desiredPms || pmLogsInfo.get('pmIds');
