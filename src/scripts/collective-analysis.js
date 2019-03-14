@@ -167,8 +167,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     };
   }
 
-  function generateChartObjectForScatter (segmentData, divId) {
-    return {
+  function generateChartObjectForScatter (segmentData, divId) {    
+    let chartProperties =  {
       data: {
         json: segmentData,
         type: 'scatter',
@@ -190,9 +190,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
           label: {
             text: 'Mean ' + currentPm,
             position: 'outer-middle'
-          },
-          max: 1,
-          min: 0
+          }
         }
       },
       bindto: '#' + divId,
@@ -205,6 +203,44 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         }
       }
     };
+    if (segmentData.length > 0) {
+      chartProperties.grid = {
+        y: {
+          lines: generateYRegionLinesForScatter(segmentData)
+        }
+      }
+    }
+    return chartProperties;
+  }
+
+  function generateYRegionLinesForScatter (data) {
+    let desiredPmAdjective = PmProcessor.getDesiredAdjective(currentPm);
+    let notDesiredPmAdjective = PmProcessor.getNotDesiredAdjective(currentPm);
+    let values = [];
+    let value;
+    data.forEach(function (point) {
+      value = point.hasOwnProperty(desiredPmAdjective) ? point[desiredPmAdjective] : point[notDesiredPmAdjective];
+      values.push(value);
+    });
+    let max = ss.max(values);
+    let min = ss.min(values);
+    let step = (max - min) / 4;
+    let lineRegionsLabels = [ '++', '+', '', '-', '--' ];
+    let regionsLines = [];
+    let regionLine;
+    const numberOfDecimals = 2;
+    for (let i = 0; i < lineRegionsLabels.length; i++) {
+      regionLine = {
+        value: max - (step * i)
+      };
+      if (lineRegionsLabels[i] !== '') {
+        regionLine.text = lineRegionsLabels[i];
+      } else {
+        regionLine.text = NumberProcessor.round(regionLine.value, numberOfDecimals);
+      }
+      regionsLines.push(regionLine);
+    }
+    return regionsLines;
   }
 
   function generateUserTooltipInfoHTMLCode (userData) {
@@ -326,6 +362,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let scatterChartData = segmentsChartsData.get(segmentName);
     let loadData = generateChartObjectForScatter(scatterChartData.scatterData).data;
     scatterChartData.scatterChart.load(loadData);
+    scatterChartData.scatterChart.ygrids(generateYRegionLinesForScatter(scatterChartData.scatterData));
   }
 
   function updateAllCharts () {
