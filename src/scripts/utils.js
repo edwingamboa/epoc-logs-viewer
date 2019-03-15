@@ -233,6 +233,10 @@ class DataProcessor {
     });
     return values;
   }
+
+  static generateRelChangeValueKey (segmentName) {
+    return `relChangeValue_${segmentName}`
+  }
 }
 
 export { CsvProcessor, DateProcessor, UIProcessor, NumberProcessor, PmProcessor, DataProcessor };

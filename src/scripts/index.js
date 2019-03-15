@@ -6,11 +6,23 @@ import 'c3/c3.css';
 import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
-import { EventsTrace } from './events-trace';
+import {
+  EventsTrace
+} from './events-trace';
 import PerformanceMeasuresTrace from './performance-measures-trace';
-import { UIProcessor } from './utils';
+import {
+  UIProcessor, DataProcessor
+} from './utils';
 
 (function () {
+  const TREND_PROGRESS_SPINNER_ID = 'trendProgressSpinner';
+  const Y_RANGE_PM_CHART = {
+    min: 0,
+    max: 1
+  };
+  const CHART_HEIGHT = 300;
+  const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
+
   var pmFileInput = document.querySelector('#' + constants.PM_FILE_INPUT_ID);
   var userTraceFileInput = document.querySelector('#' + constants.UT_FILE_INPUT_ID);
   var loadedFilesTextElement = document.querySelector('#' + constants.LOADED_FILES_TEXT_ID);
@@ -20,12 +32,9 @@ import { UIProcessor } from './utils';
   var firstRun = true;
   var eventsTrace;
   var performanceMeasuresTrace;
-  const CHART_HEIGHT = 300;
-  const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
   var segmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
   var lastSegmentDistance = constants.DEFAULT_SEGMENT_DISTANCE;
   var currentPm = constants.DEFAULT_PM_ID;
-  const TREND_PROGRESS_SPINNER_ID = 'trendProgressSpinner';
 
   pmFileInput.addEventListener('change', function (e) {
     handleFileLoading(e.target.files[0], 'pm');
@@ -52,32 +61,24 @@ import { UIProcessor } from './utils';
         performanceMeasuresTrace = new PerformanceMeasuresTrace(responses[0].data, eventsTrace.segments);
         var eventsOfInterestGridLines = parseUserTraceAsGridLines(eventsTrace.segments);
 
-        addChart(
+        addTimeSeriesChartFromRows(
           performanceMeasuresTrace.getData(true),
           constants.EPOC_MEASURES_CONTAINER_ID,
           eventsOfInterestGridLines,
-          addDetailsToUserTraceGridLines
+          addDetailsToUserTraceGridLines,
+          false,
+          Y_RANGE_PM_CHART
         );
 
-        trendsChart = addChart(
-          performanceMeasuresTrace.getChangeValueData(currentPm, true),
+        trendsChart = addTimeSeriesChartFromJSON(
+          performanceMeasuresTrace.getChangeValueData(currentPm),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines,
-          null, 
           true
         );
         addTrendLinesToTrendChart();
-        
-        var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(currentPm);
-        jointSegmentsInfo.forEach(function (jointSegmentInfo) {
-          addDivForSegmentChart(jointSegmentInfo.segment.action);
-          addChart(
-            constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
-            jointSegmentInfo.segment.action
-          );
-
-        });
+        updateSegmentCharts();
         resetFileChoosers();
         updateLoadedFilesText(responses[0].filename + '; ' + responses[1].filename);
         if (firstRun) {
@@ -129,11 +130,11 @@ import { UIProcessor } from './utils';
   function addDivForSegmentChart (segmentAction) {
     if (d3.select('#' + segmentAction).empty()) {
       d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
-      .append('div')
-      .append('h4')
-      .text(segmentAction)
-      .append('div')
-      .attr('id', segmentAction);
+        .append('div')
+        .append('h4')
+        .text(segmentAction)
+        .append('div')
+        .attr('id', segmentAction);
     }
   }
 
@@ -173,15 +174,17 @@ import { UIProcessor } from './utils';
     var jointSegmentsInfo = performanceMeasuresTrace.getJointSegmentsInfo(currentPm);
     jointSegmentsInfo.forEach(function (jointSegmentInfo) {
       addDivForSegmentChart(jointSegmentInfo.segment.action);
-      addChart(
-        constants.TREND_DATA_HEAD_ROW.concat(jointSegmentInfo.trendData),
+      addTimeSeriesChartFromJSON(
+        jointSegmentInfo.trendData,
         jointSegmentInfo.segment.action
       );
     });
   }
 
-  function clearTrendChart(onCleared) {
-    trendsChart.unload({ done: onCleared });
+  function clearTrendChart (onCleared) {
+    trendsChart.unload({
+      done: onCleared
+    });
   }
 
   function updatePmInTrendChart () {
@@ -191,21 +194,31 @@ import { UIProcessor } from './utils';
   }
 
   function addTrendLinesToTrendChart () {
-    performanceMeasuresTrace.segmentsInfo.get(currentPm).forEach(function(segmentInfo, i) {        
-      let trendPointsData = [
-        ['TimeStamp', `Trend ${segmentInfo.segment.action} ${i}`],
-        [segmentInfo.segment.time, segmentInfo.initTrendValue],
-        [segmentInfo.segment.finishTime, segmentInfo.finishTrendValue]
-      ]
-      updateDataOfTrendChart(trendPointsData, false);
+    let trendPointsData;
+    let initTrendPoint;
+    let finishTrendPoint;
+    let key;
+    let keys = [];
+    performanceMeasuresTrace.segmentsInfo.get(currentPm).forEach(function (segmentInfo, i) {
+      key = `Trend ${segmentInfo.segment.action} ${i}`;
+      keys.push(key);
+      initTrendPoint = {};
+      initTrendPoint.time = segmentInfo.segment.time;
+      initTrendPoint[key] = segmentInfo.initTrendValue;
+
+      finishTrendPoint = {};
+      finishTrendPoint.time = segmentInfo.segment.finishTime;
+      finishTrendPoint[key] = segmentInfo.finishTrendValue;
+      trendPointsData = [
+        initTrendPoint,
+        finishTrendPoint
+      ];
+      updateDataOfTrendChart(trendPointsData, keys, false);
     });
   }
 
-  function updateDataOfTrendChart (rows, cleanChart, onloaded) {
-    var loadData = {
-      rows: rows,
-      x: 'TimeStamp'
-    };
+  function updateDataOfTrendChart (json, keys, cleanChart, onloaded) {
+    var loadData = generateDataObjectForTrendCharts(json, keys);
     if (cleanChart) {
       loadData.unload = [];
     }
@@ -215,12 +228,38 @@ import { UIProcessor } from './utils';
     trendsChart.load(loadData);
   }
 
-  function addChart (data, containerId, eventsMarks, onrendered, types, hideLegend) {
+  function addTimeSeriesChartFromRows (rows, containerId, eventsMarks, onrendered, hideLegend, yRange) {
+    let data = {
+      rows: rows,
+      x: 'TimeStamp'
+    };
+    return addChart(data, containerId, eventsMarks, onrendered, hideLegend, yRange);
+  }
+
+  function addTimeSeriesChartFromJSON (json, containerId, eventsMarks, onrendered, hideLegend, yRange) {
+    let data = generateDataObjectForTrendCharts(json, generateKeysForSegmentsChangeValue());
+    return addChart(data, containerId, eventsMarks, onrendered, hideLegend, yRange);
+  }
+  
+  function generateDataObjectForTrendCharts (json, keys) {
+    return {
+      json: json,
+      keys: {
+        x: 'time',
+        value: keys
+      }
+    }
+  }
+
+  function generateKeysForSegmentsChangeValue () {
+    return constants.segmentsOfInterest.map(function (segmentName) {
+      return DataProcessor.generateRelChangeValueKey(segmentName);
+    });
+  }
+
+  function addChart (data, containerId, eventsMarks, onrendered, hideLegend, yRange) {
     var chartProperties = {
-      data: {
-        rows: data,
-        x: 'TimeStamp'
-      },
+      data: data,
       axis: {
         x: {
           type: 'timeseries',
@@ -239,6 +278,9 @@ import { UIProcessor } from './utils';
         enabled: true
       }
     };
+    if (yRange) {
+      chartProperties.axis.y = yRange;
+    }
     if (eventsMarks) {
       chartProperties.grid = {
         x: {
@@ -248,9 +290,6 @@ import { UIProcessor } from './utils';
     };
     if (onrendered) {
       chartProperties.onrendered = onrendered;
-    }
-    if (types) {
-      chartProperties.data = data;
     }
     if (hideLegend) {
       chartProperties.legend = {
@@ -295,6 +334,7 @@ import { UIProcessor } from './utils';
       }
     });
   }
+
   function appendRBtnsForTrendChart () {
     constants.pmLogsInfo.get('pmIds').forEach(function (pmId) {
       var pmInput = createInputElement(pmId, constants.CURRENT_PM_GROUP_NAME, pmId === constants.DEFAULT_PM_ID);
