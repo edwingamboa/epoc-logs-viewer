@@ -52,6 +52,7 @@ class PerformanceMeasuresTrace {
     this.segmentsInfo.get(pmId).forEach(function (segmentInfo) {
       changeValueData = changeValueData.concat(segmentInfo.trendData);
     });
+    console.log(changeValueData);
     return changeValueData;
   }
 
@@ -140,25 +141,18 @@ class PerformanceMeasuresTrace {
   }
 
   addSegment (relativeChangeData, segment, pmId) {
-    let segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
-    let initTime;
-    let newData;
-    let relChangeValKey = DataProcessor.generateRelChangeValueKey(segment.action);
-    let segmentTrendDataInSeconds = relativeChangeData.map(function (data) {
-      if (!initTime) {
-        initTime = data.time;
-      }
-      newData = { };
-      newData.time = DateProcessor.millisecondsToSeconds(data.time - initTime);
-      newData[relChangeValKey] = data[relChangeValKey];
-      return newData;
-    }.bind(this));
     if (relativeChangeData.length > 1) {
+      let segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
+      let relChangeValKey = DataProcessor.generateRelChangeValueKey(segment.action);
+      let segmentTrendDataInSeconds = DataProcessor.getDataAsArrayInSeconds(relativeChangeData, relChangeValKey, 'time');
+      console.log(segmentTrendDataInSeconds);
+      let trendValKey = DataProcessor.generateTrendValueKey(segment.action);
       let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendDataInSeconds));
       let initTrendValue = trendFunction(segmentTrendDataInSeconds[0][0]);
       let finishTrendValue = trendFunction(segmentTrendDataInSeconds[relativeChangeData.length - 1][0]);
       relativeChangeData = this.addTrendPointsToSegment(
         relativeChangeData,
+        trendValKey,
         initTrendValue,
         finishTrendValue
       );
@@ -169,7 +163,7 @@ class PerformanceMeasuresTrace {
       let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
       let changeValues = DataProcessor.getColumnOfData(segmentData, CHANGE_VAL_INDEX_IN_TREND_DATA);
       
-      let segmentInfo = new SegmentInfo(segment, initTrendValue, finishTrendValue, pmValues, changeValues, relativeChangeData, pmId);
+      let segmentInfo = new SegmentInfo(segment, pmValues, changeValues, relativeChangeData, pmId);
       this.segmentsInfo.get(pmId).push(segmentInfo);
     }
   }
@@ -213,37 +207,39 @@ class PerformanceMeasuresTrace {
 
     let refSegment = new Segment (segmentsInfo[0].segment.action);
     // segmentTrendData
-    let newData;
     let relChangeValKey = DataProcessor.generateRelChangeValueKey(refSegment.action);
-    segmentTrendData = segmentTrendData.map(function (data) {
-      newData = {};
-      newData.time = data.time;
-      newData[relChangeValKey] = data[relChangeValKey];
-      return newData;
-    });
-    let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendData));
-    let initTrendValue = trendFunction(segmentTrendData[0][0]);
-    let finishTrendValue = trendFunction(segmentTrendData[segmentTrendData.length - 1][0]);
+    let segmentTrendDataInSeconds = DataProcessor.getDataAsArrayInSeconds(segmentTrendData, relChangeValKey);
+    let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendDataInSeconds));
+    let initTrendValue = trendFunction(segmentTrendDataInSeconds[0][0]);
+    let finishTrendValue = trendFunction(segmentTrendDataInSeconds[segmentTrendData.length - 1][0]);
     // segmentTrendData - setTrendPoints
-    segmentTrendData = this.addTrendPointsToSegment(segmentTrendData, initTrendValue, finishTrendValue);
+    let trendValKey = DataProcessor.generateTrendValueKey(refSegment.action);
+    segmentTrendData = this.removeTrendPointsOfSegmentData(segmentTrendData, trendValKey);
+    segmentTrendData = this.addTrendPointsToSegment(segmentTrendData, trendValKey, initTrendValue, finishTrendValue);
 
     const pmColumnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
     let changeValues = DataProcessor.getColumnOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
 
-    let jointSegmentsInfo = new SegmentInfo(refSegment, initTrendValue, finishTrendValue, pmValues, changeValues, segmentTrendData, pmId);
+    let jointSegmentsInfo = new SegmentInfo(refSegment, pmValues, changeValues, segmentTrendData, pmId);
     jointSegmentsInfo.spentTime = spentTime;
     jointSegmentsInfo.spentTimes = spentTimes;
 
     return jointSegmentsInfo;
   }
 
-  addTrendPointsToSegment (trendData, initTrendValue, finishTrendValue, segmentInitIndex, segmentFinalIndex) {
+  removeTrendPointsOfSegmentData (data, trendPointKey) {
+    delete data[0][trendPointKey]
+    delete data[data.length - 1][trendPointKey]
+    return data;
+  }
+
+  addTrendPointsToSegment (trendData, trendValKey, initTrendValue, finishTrendValue, segmentInitIndex, segmentFinalIndex) {
     segmentInitIndex = !segmentInitIndex ? 0: segmentInitIndex;
     segmentFinalIndex = !segmentFinalIndex ? trendData.length - 1: segmentFinalIndex;
 
-    trendData[segmentInitIndex].trendValue = initTrendValue;
-    trendData[segmentFinalIndex].trendValue = finishTrendValue;
+    trendData[segmentInitIndex][trendValKey] = initTrendValue;
+    trendData[segmentFinalIndex][trendValKey] = finishTrendValue;
     return trendData;
   }
 
@@ -253,10 +249,8 @@ class PerformanceMeasuresTrace {
 }
 
 class SegmentInfo {
-  constructor(segment, initTrendValue, finishTrendValue, pmValues, changeValues, segmentTrendData, pmId) {
+  constructor(segment, pmValues, changeValues, segmentTrendData, pmId) {
     this.segment = segment;
-    this.initTrendValue = initTrendValue;
-    this.finishTrendValue = finishTrendValue;
     if (segment.hasOwnProperty('time') && segment.hasOwnProperty('finishTime')) {
       this.spentTime = DateProcessor.elapsedSeconds(segment.time, segment.finishTime);
     }
@@ -275,6 +269,14 @@ class SegmentInfo {
 
   pmIsConstant () {
     return this.minPmValue === this.maxPmValue;
+  }
+
+  get initTrendValue () {
+    return this.trendData[0][DataProcessor.generateTrendValueKey(this.segment.action)];
+  }
+
+  get finishTrendValue () {
+    return this.trendData[this.trendData.length - 1][DataProcessor.generateTrendValueKey(this.segment.action)];
   }
 }
 
