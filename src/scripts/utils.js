@@ -235,7 +235,26 @@ class DataProcessor {
   }
 
   static generateRelChangeValueKey (segmentName) {
-    return `relChangeValue_${segmentName}`
+    return `relChangeValue_${segmentName}`;
+  }
+
+  static generateTrendValueKey (segmentName) {
+    return `trendValue_${segmentName}`;
+  }
+
+  static getDataAsArrayInSeconds (data, valueKey, timeKey) {
+    let initTime;
+    let dataAsArrayInSeconds;
+    return data.map(function (dataItem) {
+      if (!initTime) {
+        initTime = dataItem[timeKey];
+      }
+      dataAsArrayInSeconds = [
+        DateProcessor.millisecondsToSeconds(dataItem[timeKey] - initTime),
+        dataItem[valueKey]
+      ];
+      return dataAsArrayInSeconds;
+    }.bind(this));
   }
 }
 
