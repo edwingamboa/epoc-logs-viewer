@@ -197,13 +197,17 @@ class PerformanceMeasuresTrace {
     let spentTime = 0;
     let refSegment = new Segment (segmentsInfo[0].segment.action);
     let trendValKey = DataProcessor.generateTrendValueKey(refSegment.action);
+    let userRatings = [];
     segmentsInfo.forEach(function (segmentInfo) {
       segmentFinalIndex = segmentInfo.segment.finishIndex || this.getData().length - 1;
       segmentTrendData = segmentTrendData.concat(this.removeTrendPointsOfSegmentData(segmentInfo.trendData, trendValKey));
       segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
       spentTimes.push(spentTime);
+      userRatings = userRatings.concat(segmentInfo.userRatings);
     }.bind(this));
+    // user Ratings
+    refSegment.setUserRatings(userRatings);
 
     // segmentTrendData
     let relChangeValKey = DataProcessor.generateRelChangeValueKey(refSegment.action);
@@ -269,6 +273,10 @@ class SegmentInfo {
     return this.minPmValue === this.maxPmValue;
   }
 
+  get userRatings () {
+    return this.segment.userRatings;
+  }
+
   get segmentName () {
     return this.segment.action;
   }
@@ -282,7 +290,7 @@ class SegmentInfo {
   }
 
   get initTime () {
-    return this.segment.time;
+    return new Date(this.trendData[0].time);
   }
 
   get finishTime () {
