@@ -50,6 +50,13 @@ export const pmLogsInfo = new Map([
   ['pmIds', ['SCA_ENG', 'SCA_VAL', 'SCA_MED', 'SCA_FRU', 'SCA_FOC', 'SCA_EXC', 'SCA_LEX']]
 ]);
 
+export const userRatings = [
+  'C+',
+  'C-',
+  'I+',
+  'I-'
+]
+
 export const segmentsOfInterest = [
   'Link_Orientierung_xpage',
   'Link_Theorie_xpage',

@@ -1,5 +1,5 @@
 import { CsvProcessor, DateProcessor } from './utils';
-import { segmentsOfInterest, DEFAULT_SEGMENT_DISTANCE } from './constants';
+import { segmentsOfInterest, DEFAULT_SEGMENT_DISTANCE, userRatings } from './constants';
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -86,7 +86,23 @@ class EventsTrace {
           }
           if (lastSegmentInitTime &&
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
-            segments.push(new Segment(lastSegmentAction, lastSegmentInitTime, currentSegmentInitTime));
+            let segment = new Segment(lastSegmentAction, lastSegmentInitTime, currentSegmentInitTime);
+            let segmentUserRatings = [];
+            // User ratings should be right before next segment
+            if (index - 2 >= 0) {
+              let lastTwoActions = [
+                this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[index - 1], ';')),
+                this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[index - 2], ';'))
+              ];
+              if (userRatings.indexOf(lastTwoActions[0]) > -1) {
+                segmentUserRatings.push(lastTwoActions[0]);
+                if (userRatings.indexOf(lastTwoActions[1]) > -1) {
+                  segmentUserRatings.push(lastTwoActions[1]);
+                }
+              }
+            }
+            segment.setUserRatings(segmentUserRatings);
+            segments.push(segment);
             lastSegmentInitTime = currentSegmentInitTime;
             lastSegmentAction = segmentAction;
           };
@@ -112,6 +128,11 @@ class Segment {
       this.finishTime = finishTime;
       this.details += DateProcessor.extractTimeHHMMSS(finishTime);
     }
+    this.userRatings = [];
+  }
+
+  setUserRatings (userRatings) {
+    this.userRatings = userRatings;
   }
 }
 
