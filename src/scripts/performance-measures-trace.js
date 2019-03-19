@@ -269,12 +269,24 @@ class SegmentInfo {
     return this.minPmValue === this.maxPmValue;
   }
 
+  get segmentName () {
+    return this.segment.action;
+  }
+
   get initTrendValue () {
     return this.trendData[0][DataProcessor.generateTrendValueKey(this.segment.action)];
   }
 
   get finishTrendValue () {
     return this.trendData[this.trendData.length - 1][DataProcessor.generateTrendValueKey(this.segment.action)];
+  }
+
+  get initTime () {
+    return this.segment.time;
+  }
+
+  get finishTime () {
+    return new Date(this.trendData[this.trendData.length - 1].time);
   }
 }
 

@@ -238,8 +238,8 @@ class DataProcessor {
     return `relChangeValue_${segmentName}`;
   }
 
-  static generateTrendValueKey (segmentName) {
-    return `trendValue_${segmentName}`;
+  static generateTrendValueKey (segmentName, i) {
+    return `trendValue_${segmentName}${i ? '_' + i : ''}`;
   }
 
   static getDataAsArrayInSeconds (data, valueKey, timeKey) {

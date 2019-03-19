@@ -74,10 +74,12 @@ import {
           performanceMeasuresTrace.getChangeValueData(currentPm),
           constants.TRENDS_VIEWER_CONTAINER_ID,
           generateKeysForSegmentsChangeValue(),
+          false,
           eventsOfInterestGridLines,
           addDetailsToUserTraceGridLines,
           true
         );
+        addTrendLinesToTrendChart();
         updateSegmentCharts();
         resetFileChoosers();
         updateLoadedFilesText(responses[0].filename + '; ' + responses[1].filename);
@@ -179,7 +181,8 @@ import {
       addTimeSeriesChartFromJSON(
         jointSegmentInfo.trendData,
         segmentName,
-        generateKeysForSegmentChangeValue(segmentName)
+        generateKeysForSegmentChangeValue(segmentName),
+        true
       );
     });
   }
@@ -193,6 +196,28 @@ import {
   function updatePmInTrendChart () {
     let changeValueData = performanceMeasuresTrace.getChangeValueData(currentPm, true);
     updateDataOfTrendChart(changeValueData, generateKeysForSegmentsChangeValue(), true);
+    addTrendLinesToTrendChart();
+  }
+
+  function addTrendLinesToTrendChart () {
+    let json = [];
+    let keys = [];
+    let trendValueKey;
+    let initValue;
+    let finishValue;
+    performanceMeasuresTrace.segmentsInfo.get(currentPm).forEach(function(segmentInfo, i) {
+      trendValueKey = DataProcessor.generateTrendValueKey(segmentInfo.segmentName, i);
+      keys.push(trendValueKey);
+      initValue = {};
+      initValue.time = segmentInfo.initTime;
+      initValue[trendValueKey] = segmentInfo.initTrendValue;
+      finishValue = {};
+      finishValue.time = segmentInfo.finishTime;
+      finishValue[trendValueKey] = segmentInfo.finishTrendValue;
+      json.push(initValue);
+      json.push(finishValue);
+    });
+    updateDataOfTrendChart(json, keys, false);
   }
 
   function updateDataOfTrendChart (json, keys, cleanChart, onloaded) {
@@ -214,9 +239,9 @@ import {
     return addChart(data, containerId, eventsMarks, onrendered, hideLegend, yRange);
   }
 
-  function addTimeSeriesChartFromJSON (json, containerId, dataKeys, eventsMarks, onrendered, hideLegend, yRange) {
+  function addTimeSeriesChartFromJSON (json, containerId, dataKeys, connectNull, eventsMarks, onrendered, hideLegend, yRange) {
     let data = generateDataObjectForTrendCharts(json, dataKeys);
-    return addChart(data, containerId, eventsMarks, onrendered, hideLegend, yRange);
+    return addChart(data, containerId, eventsMarks, onrendered, hideLegend, yRange, connectNull);
   }
   
   function generateDataObjectForTrendCharts (json, keys) {
@@ -231,8 +256,8 @@ import {
 
   function generateKeysForSegmentsChangeValue () {
     let keysForSegmentsChangeValue = [];
-    constants.segmentsOfInterest.forEach(function (segmentName) {
-      keysForSegmentsChangeValue = keysForSegmentsChangeValue.concat(generateKeysForSegmentChangeValue(segmentName));
+    constants.segmentsOfInterest.forEach(function (segmentName, i) {
+      keysForSegmentsChangeValue.push(DataProcessor.generateRelChangeValueKey(segmentName));
     });
     return keysForSegmentsChangeValue;
   }
@@ -244,7 +269,7 @@ import {
     ]
   }
 
-  function addChart (data, containerId, eventsMarks, onrendered, hideLegend, yRange) {
+  function addChart (data, containerId, eventsMarks, onrendered, hideLegend, yRange, connectNull) {
     var chartProperties = {
       data: data,
       axis: {
@@ -263,11 +288,13 @@ import {
       },
       zoom: {
         enabled: true
-      },
-      line: {
-        connectNull: true
       }
     };
+    if (connectNull) {
+      chartProperties.line = {
+        connectNull: true
+      }
+    }
     if (yRange) {
       chartProperties.axis.y = yRange;
     }
