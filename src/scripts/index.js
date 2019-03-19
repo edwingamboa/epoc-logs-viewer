@@ -192,7 +192,7 @@ import {
 
   function updatePmInTrendChart () {
     let changeValueData = performanceMeasuresTrace.getChangeValueData(currentPm, true);
-    updateDataOfTrendChart(changeValueData, true);
+    updateDataOfTrendChart(changeValueData, generateKeysForSegmentsChangeValue(), true);
   }
 
   function updateDataOfTrendChart (json, keys, cleanChart, onloaded) {

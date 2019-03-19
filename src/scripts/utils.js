@@ -243,6 +243,7 @@ class DataProcessor {
   }
 
   static getDataAsArrayInSeconds (data, valueKey, timeKey) {
+    timeKey = timeKey === undefined ? 'time' : timeKey;
     let initTime;
     let dataAsArrayInSeconds;
     return data.map(function (dataItem) {

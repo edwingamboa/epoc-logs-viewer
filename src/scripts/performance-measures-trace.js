@@ -52,7 +52,6 @@ class PerformanceMeasuresTrace {
     this.segmentsInfo.get(pmId).forEach(function (segmentInfo) {
       changeValueData = changeValueData.concat(segmentInfo.trendData);
     });
-    console.log(changeValueData);
     return changeValueData;
   }
 
@@ -144,8 +143,7 @@ class PerformanceMeasuresTrace {
     if (relativeChangeData.length > 1) {
       let segmentFinalIndex = segment.finishIndex || this.getData().length - 1;
       let relChangeValKey = DataProcessor.generateRelChangeValueKey(segment.action);
-      let segmentTrendDataInSeconds = DataProcessor.getDataAsArrayInSeconds(relativeChangeData, relChangeValKey, 'time');
-      console.log(segmentTrendDataInSeconds);
+      let segmentTrendDataInSeconds = DataProcessor.getDataAsArrayInSeconds(relativeChangeData, relChangeValKey);
       let trendValKey = DataProcessor.generateTrendValueKey(segment.action);
       let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendDataInSeconds));
       let initTrendValue = trendFunction(segmentTrendDataInSeconds[0][0]);
@@ -197,24 +195,23 @@ class PerformanceMeasuresTrace {
     let segmentFinalIndex;
     let spentTimes = [];
     let spentTime = 0;
+    let refSegment = new Segment (segmentsInfo[0].segment.action);
+    let trendValKey = DataProcessor.generateTrendValueKey(refSegment.action);
     segmentsInfo.forEach(function (segmentInfo) {
       segmentFinalIndex = segmentInfo.segment.finishIndex || this.getData().length - 1;
-      segmentTrendData = segmentTrendData.concat(segmentInfo.trendData);
+      segmentTrendData = segmentTrendData.concat(this.removeTrendPointsOfSegmentData(segmentInfo.trendData, trendValKey));
       segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
       spentTimes.push(spentTime);
     }.bind(this));
 
-    let refSegment = new Segment (segmentsInfo[0].segment.action);
     // segmentTrendData
     let relChangeValKey = DataProcessor.generateRelChangeValueKey(refSegment.action);
     let segmentTrendDataInSeconds = DataProcessor.getDataAsArrayInSeconds(segmentTrendData, relChangeValKey);
     let trendFunction = ss.linearRegressionLine(ss.linearRegression(segmentTrendDataInSeconds));
     let initTrendValue = trendFunction(segmentTrendDataInSeconds[0][0]);
-    let finishTrendValue = trendFunction(segmentTrendDataInSeconds[segmentTrendData.length - 1][0]);
+    let finishTrendValue = trendFunction(segmentTrendDataInSeconds[segmentTrendDataInSeconds.length - 1][0]);
     // segmentTrendData - setTrendPoints
-    let trendValKey = DataProcessor.generateTrendValueKey(refSegment.action);
-    segmentTrendData = this.removeTrendPointsOfSegmentData(segmentTrendData, trendValKey);
     segmentTrendData = this.addTrendPointsToSegment(segmentTrendData, trendValKey, initTrendValue, finishTrendValue);
 
     const pmColumnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
@@ -229,9 +226,10 @@ class PerformanceMeasuresTrace {
   }
 
   removeTrendPointsOfSegmentData (data, trendPointKey) {
-    delete data[0][trendPointKey]
-    delete data[data.length - 1][trendPointKey]
-    return data;
+    let newData = [...data]
+    delete newData[0][trendPointKey]
+    delete newData[data.length - 1][trendPointKey]
+    return newData;
   }
 
   addTrendPointsToSegment (trendData, trendValKey, initTrendValue, finishTrendValue, segmentInitIndex, segmentFinalIndex) {
