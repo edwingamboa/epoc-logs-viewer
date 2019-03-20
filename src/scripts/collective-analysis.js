@@ -29,6 +29,10 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
   const SUFFIX_TITLE_ID = 'suffixTitle';
   const CHARTS_SPINNER_ID = 'chartsProgressSpinner';
+  const TRENDS_LABELS = {
+    positive: 'Positive Trend',
+    negative: 'Negative Trend'
+  }
 
   addSetUpUIElements();
 
@@ -98,8 +102,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function generateInitialBarChartData () {
     let barChartData = [];
-    barChartData[POSITIVE_RESULT_INDEX] = { name: PmProcessor.getDesiredAdjective(currentPm), percentage: 0, count: 0 };
-    barChartData[NEGATIVE_RESULT_INDEX] = { name: PmProcessor.getNotDesiredAdjective(currentPm), percentage: 0, count: 0 };
+    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, percentage: 0, count: 0 };
+    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, percentage: 0, count: 0 };
     return barChartData;
   }
 
@@ -174,7 +178,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         type: 'scatter',
         keys: {
           x: 'userId',
-          value: [PmProcessor.getDesiredAdjective(currentPm), PmProcessor.getNotDesiredAdjective(currentPm)]
+          value: [TRENDS_LABELS.positive, TRENDS_LABELS.negative]
         },
         xSort: false
       },
@@ -214,8 +218,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   }
 
   function generateYRegionLinesForScatter (data) {
-    let desiredPmAdjective = PmProcessor.getDesiredAdjective(currentPm);
-    let notDesiredPmAdjective = PmProcessor.getNotDesiredAdjective(currentPm);
+    let desiredPmAdjective = TRENDS_LABELS.positive;
+    let notDesiredPmAdjective = TRENDS_LABELS.negative;
     let values = [];
     let value;
     data.forEach(function (point) {
@@ -259,7 +263,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let rowData = [
       {
         squareColor: userData.segmentInfo.isDesired() ? COLOR_CODES[POSITIVE_RESULT_INDEX] : COLOR_CODES[NEGATIVE_RESULT_INDEX],
-        value: userData.segmentInfo.isDesired() ? PmProcessor.getDesiredAdjective(currentPm) : PmProcessor.getNotDesiredAdjective(currentPm)
+        value: userData.segmentInfo.isDesired() ? TRENDS_LABELS.positive : TRENDS_LABELS.negative
       }
     ];
 
@@ -339,9 +343,9 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     userData.userId = userId;
     userData.segmentInfo = segmentInfo;
     if (segmentInfo.isDesired()) {
-      userData[PmProcessor.getDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
+      userData[TRENDS_LABELS.positive] = segmentInfo.meanPmValue;
     } else {
-      userData[PmProcessor.getNotDesiredAdjective(currentPm)] = segmentInfo.meanPmValue;
+      userData[TRENDS_LABELS.negative] = segmentInfo.meanPmValue;
     }
     segmentData.scatterData.push(userData);
     segmentsChartsData.set(segmentName, segmentData);
