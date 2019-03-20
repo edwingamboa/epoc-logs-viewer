@@ -1,5 +1,5 @@
 import * as ss from 'simple-statistics';
-import { CsvProcessor, DateProcessor, PmProcessor, DataProcessor } from './utils';
+import { CsvProcessor, DateProcessor, PmProcessor, DataProcessor, NumberProcessor } from './utils';
 import { pmLogsInfo } from './constants';
 import { Segment } from './events-trace';
 
@@ -295,6 +295,19 @@ class SegmentInfo {
 
   get finishTime () {
     return new Date(this.trendData[this.trendData.length - 1].time);
+  }
+
+  get details () {
+    const numberOfDecimals = 5;
+    const defaultNumberOfVisits = 1
+    return [
+      { label: `Mean ${this.pmId}`, value: NumberProcessor.round(this.meanPmValue, numberOfDecimals) },
+      { label: `Max ${this.pmId}`, value: NumberProcessor.round(this.maxPmValue, numberOfDecimals) },
+      { label: `Min ${this.pmId}`, value: NumberProcessor.round(this.minPmValue, numberOfDecimals) },
+      { label: 'Number of visits', value: this.hasOwnProperty('spentTimes') ? this.spentTimes.length : defaultNumberOfVisits },
+      { label: 'Spent time (HH:MM:SS)', value: DateProcessor.secondsToHHMMSS(this.spentTime) },
+      { label: 'Ratings', value: this.userRatings.join(', ') }
+    ];
   }
 }
 
