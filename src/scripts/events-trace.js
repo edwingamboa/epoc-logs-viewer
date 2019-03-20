@@ -1,5 +1,6 @@
 import { CsvProcessor, DateProcessor } from './utils';
 import { segmentsOfInterest, DEFAULT_SEGMENT_DISTANCE, userRatings } from './constants';
+import { numericSort } from 'simple-statistics';
 
 const traceLogsInfo = new Map([
   ['sessionId', { initCol: 0 }],
@@ -88,7 +89,7 @@ class EventsTrace {
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
             let segment = new Segment(lastSegmentAction, lastSegmentInitTime, currentSegmentInitTime);
             // User ratings should be right before next segment
-            segment.setUserRatings(this.determineUserRatings(this.getPreviousActions(index, 2)));
+            segment.setUserRatings(this.determineUserRatings(this.getPreviousActions(index, 2, true)));
             segments.push(segment);
             lastSegmentInitTime = currentSegmentInitTime;
             lastSegmentAction = segmentAction;
@@ -99,29 +100,38 @@ class EventsTrace {
     // Add last identified segment
     let lastSegmentFinishTime = new Date(columns[columnOfTime]);
     let lastSegment = new Segment(lastSegmentAction, lastSegmentInitTime, lastSegmentFinishTime);
-    lastSegment.setUserRatings(this.determineUserRatings(this.getPreviousActions(this.logs.length - 1, 2)));
+    lastSegment.setUserRatings(this.determineUserRatings(this.getPreviousActions(this.logs.length - 1, 2, true)));
     segments.push(lastSegment);
     return segments;
   }
 
-  getPreviousActions (currentIndex, numberOfActions) {
-    let previousActions = []
-    if (currentIndex - numberOfActions >= 0) {
-      for (let i = 1; i <= numberOfActions; i++) {
+  getPreviousActions (currentIndex, numberOfActions, excludeRecommend) {
+    let previousActions = [];
+    if (excludeRecommend) {
+      numberOfActions++;
+    }
+    for (let i = 1; i <= numberOfActions; i++) {
+      if (currentIndex - i >= 0) {
         let action = this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[currentIndex - i], ';'));
-        previousActions.push(action);
+        if (!this.isRecommend(action)) {
+          previousActions.push(action);
+        }
       }
     }
     return previousActions;
   }
 
+  isRecommend (action) {
+    return action === '' || action.includes(']');
+  }
+
   determineUserRatings (lastTwoActions) {
     let segmentUserRatings = [];
-    if (lastTwoActions.length === 2) {
-      if (userRatings.indexOf(lastTwoActions[0]) > -1) {
-        segmentUserRatings.push(lastTwoActions[0]);
-        if (userRatings.indexOf(lastTwoActions[1]) > -1) {
-          segmentUserRatings.push(lastTwoActions[1]);
+    if (lastTwoActions.length >= 2) {
+      if (userRatings.indexOf(lastTwoActions[0].trim()) > -1) {
+        segmentUserRatings.push(lastTwoActions[0].trim());
+        if (userRatings.indexOf(lastTwoActions[1].trim()) > -1) {
+          segmentUserRatings.push(lastTwoActions[1].trim());
         }
       }
     }
