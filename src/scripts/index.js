@@ -129,15 +129,31 @@ import {
     });
   }
 
-  function addDivForSegmentChart (segmentAction) {
-    if (d3.select('#' + segmentAction).empty()) {
-      d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
-        .append('div')
-        .append('h4')
-        .text(segmentAction)
-        .append('div')
-        .attr('id', segmentAction);
+  function addDivForSegmentChart (segmentInfo) {
+    let segmentName = segmentInfo.segmentName;
+    if (d3.select('#' + segmentName).empty()) {
+      let segmentContainer = d3.select('#' + constants.SEGMENTS_VIEWER_CONTAINER_ID)
+        .append('div');
+      segmentContainer.append('h4')
+        .text(segmentName);
+      let segmentDetails = segmentContainer.append('div');
+      segmentContainer.append('div')
+        .attr('id', segmentName);
+      addDetailsToSegment(segmentDetails, segmentInfo.details);
     }
+  }
+
+  function addDetailsToSegment (detailsContainer, segmentDetails) {
+    segmentDetails.forEach(function (detail) {
+      if (detail.value !== '') {
+        let detailContainer = detailsContainer.append('div');
+        detailContainer.append('span')
+          .text(`${detail.label}: `)
+          .attr('class', 'font-weight-bold');
+        detailContainer.append('span')
+          .text(detail.value);
+      }
+    });
   }
 
   function clearSegmentChartsContainer () {
@@ -177,7 +193,7 @@ import {
     let segmentName;
     jointSegmentsInfo.forEach(function (jointSegmentInfo) {
       segmentName = jointSegmentInfo.segment.action;
-      addDivForSegmentChart(segmentName);
+      addDivForSegmentChart(jointSegmentInfo);
       addTimeSeriesChartFromJSON(
         jointSegmentInfo.trendData,
         segmentName,
