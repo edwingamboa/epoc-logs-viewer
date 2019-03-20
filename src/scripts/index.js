@@ -292,9 +292,7 @@ import {
         x: {
           type: 'timeseries',
           tick: {
-            format: function (x) {
-              return x.toLocaleString('de-DE');
-            }
+            format: '%H:%M:%S'
           }
         }
       },
