@@ -203,7 +203,7 @@ class PerformanceMeasuresTrace {
       segmentTrendData = segmentTrendData.concat(this.removeTrendPointsOfSegmentData(segmentInfo.trendData, trendValKey));
       segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
-      spentTimes.push(spentTime);
+      spentTimes.push(segmentInfo.spentTime);
       if (segmentInfo.userRatings.length > 0) {
         userRatings.push(segmentInfo.userRatings);
       }
@@ -286,6 +286,17 @@ class SegmentInfo {
     }).join('; ');
   }
 
+  spentTimeAsString () {
+    let spentTimeString = DateProcessor.secondsToHHMMSS(this.spentTime);
+    if (this.isJoint) {
+      let spentTimesString = this.spentTimes.map(function (spentTime) { 
+        return DateProcessor.secondsToHHMMSS(spentTime); 
+      }).join(', ');
+      spentTimeString += ` => ${spentTimesString}`;
+    }
+    return spentTimeString;
+  }
+
   get userRatings () {
     return this.segment.userRatings;
   }
@@ -317,8 +328,8 @@ class SegmentInfo {
       { label: `Mean ${this.pmId}`, value: NumberProcessor.round(this.meanPmValue, numberOfDecimals) },
       { label: `Max ${this.pmId}`, value: NumberProcessor.round(this.maxPmValue, numberOfDecimals) },
       { label: `Min ${this.pmId}`, value: NumberProcessor.round(this.minPmValue, numberOfDecimals) },
-      { label: 'Number of visits', value: this.hasOwnProperty('spentTimes') ? this.spentTimes.length : defaultNumberOfVisits },
-      { label: 'Spent time (HH:MM:SS)', value: DateProcessor.secondsToHHMMSS(this.spentTime) },
+      { label: 'Number of visits', value: this.isJoint ? this.spentTimes.length : defaultNumberOfVisits },
+      { label: 'Spent time (HH:MM:SS)', value: this.spentTimeAsString() },
       { label: 'Ratings', value: this.userRatingsAsString() }
     ];
   }
