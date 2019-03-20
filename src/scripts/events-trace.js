@@ -87,21 +87,8 @@ class EventsTrace {
           if (lastSegmentInitTime &&
             DateProcessor.elapsedSeconds(lastSegmentInitTime, currentSegmentInitTime) >= minElapsedSeconds) {
             let segment = new Segment(lastSegmentAction, lastSegmentInitTime, currentSegmentInitTime);
-            let segmentUserRatings = [];
             // User ratings should be right before next segment
-            if (index - 2 >= 0) {
-              let lastTwoActions = [
-                this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[index - 1], ';')),
-                this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[index - 2], ';'))
-              ];
-              if (userRatings.indexOf(lastTwoActions[0]) > -1) {
-                segmentUserRatings.push(lastTwoActions[0]);
-                if (userRatings.indexOf(lastTwoActions[1]) > -1) {
-                  segmentUserRatings.push(lastTwoActions[1]);
-                }
-              }
-            }
-            segment.setUserRatings(segmentUserRatings);
+            segment.setUserRatings(this.determineUserRatings(this.getPreviousActions(index, 2)));
             segments.push(segment);
             lastSegmentInitTime = currentSegmentInitTime;
             lastSegmentAction = segmentAction;
@@ -111,8 +98,36 @@ class EventsTrace {
     }.bind(this));
     // Add last identified segment
     let lastSegmentFinishTime = new Date(columns[columnOfTime]);
-    segments.push(new Segment(lastSegmentAction, lastSegmentInitTime, lastSegmentFinishTime));
+    let lastSegment = new Segment(lastSegmentAction, lastSegmentInitTime, lastSegmentFinishTime);
+    lastSegment.setUserRatings(this.determineUserRatings(this.getPreviousActions(this.logs.length - 1, 2)));
+    segments.push(lastSegment);
     return segments;
+  }
+
+  getPreviousActions (currentIndex, numberOfActions) {
+    let previousActions = []
+    if (currentIndex - numberOfActions >= 0) {
+      for (let i = 1; i <= numberOfActions; i++) {
+        let action = this.generateSegmentAction(CsvProcessor.getColumnsOfCsvLine(this.logs[currentIndex - i], ';'));
+        previousActions.push(action);
+      }
+    }
+    return previousActions;
+  }
+
+  determineUserRatings (lastTwoActions) {
+    console.log('lastTwoActions', lastTwoActions);
+    let segmentUserRatings = [];
+    if (lastTwoActions.length === 2) {
+      if (userRatings.indexOf(lastTwoActions[0]) > -1) {
+        segmentUserRatings.push(lastTwoActions[0]);
+        if (userRatings.indexOf(lastTwoActions[1]) > -1) {
+          segmentUserRatings.push(lastTwoActions[1]);
+        }
+      }
+    }
+    console.log('segmentUserRatings', segmentUserRatings);
+    return segmentUserRatings;
   }
 }
 
