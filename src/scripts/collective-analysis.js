@@ -256,19 +256,14 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       .attr('colspan', 2)
       .text(userData.userId);
 
-    const numberOfDecimals = 5;
-    const defaultNumberOfVisits = 1
-    const rowData = [
+    let rowData = [
       {
         squareColor: userData.segmentInfo.isDesired() ? COLOR_CODES[POSITIVE_RESULT_INDEX] : COLOR_CODES[NEGATIVE_RESULT_INDEX],
         value: userData.segmentInfo.isDesired() ? PmProcessor.getDesiredAdjective(currentPm) : PmProcessor.getNotDesiredAdjective(currentPm)
-      },
-      { label: 'Mean ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.meanPmValue, numberOfDecimals) },
-      { label: 'Max ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.maxPmValue, numberOfDecimals) },
-      { label: 'Min ' + currentPm, value: NumberProcessor.round(userData.segmentInfo.minPmValue, numberOfDecimals) },
-      { label: 'Number of visits', value: userData.segmentInfo.hasOwnProperty('spentTimes') ? userData.segmentInfo.spentTimes.length : defaultNumberOfVisits },
-      { label: 'Spent time (HH:MM:SS)', value: DateProcessor.secondsToHHMMSS(userData.segmentInfo.spentTime) }
+      }
     ];
+
+    rowData = rowData.concat(userData.segmentInfo.details);
 
     let rowContent;
     let rowLabel;
