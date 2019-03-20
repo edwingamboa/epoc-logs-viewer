@@ -204,7 +204,9 @@ class PerformanceMeasuresTrace {
       segmentData = segmentData.concat(this.getData().slice(segmentInfo.segment.initIndex, segmentFinalIndex + 1));
       spentTime += segmentInfo.spentTime;
       spentTimes.push(spentTime);
-      userRatings = userRatings.concat(segmentInfo.userRatings);
+      if (segmentInfo.userRatings.length > 0) {
+        userRatings.push(segmentInfo.userRatings);
+      }
     }.bind(this));
     // user Ratings
     refSegment.setUserRatings(userRatings);
@@ -225,6 +227,7 @@ class PerformanceMeasuresTrace {
     let jointSegmentsInfo = new SegmentInfo(refSegment, pmValues, changeValues, segmentTrendData, pmId);
     jointSegmentsInfo.spentTime = spentTime;
     jointSegmentsInfo.spentTimes = spentTimes;
+    jointSegmentsInfo.isJoint = true;
 
     return jointSegmentsInfo;
   }
@@ -262,6 +265,7 @@ class SegmentInfo {
     this.maxPmValue = ss.max(pmValues),
     this.minPmValue = ss.min(pmValues),
     this.trendData = segmentTrendData;
+    this.isJoint = false;
   }
 
   isDesired() {
@@ -271,6 +275,15 @@ class SegmentInfo {
 
   pmIsConstant () {
     return this.minPmValue === this.maxPmValue;
+  }
+
+  userRatingsAsString () {
+    if (!this.isJoint) {
+      return this.userRatings.join(',');
+    }
+    return this.userRatings.map(function (subUserRatings) {
+      return subUserRatings.join(',');
+    }).join('; ');
   }
 
   get userRatings () {
@@ -306,7 +319,7 @@ class SegmentInfo {
       { label: `Min ${this.pmId}`, value: NumberProcessor.round(this.minPmValue, numberOfDecimals) },
       { label: 'Number of visits', value: this.hasOwnProperty('spentTimes') ? this.spentTimes.length : defaultNumberOfVisits },
       { label: 'Spent time (HH:MM:SS)', value: DateProcessor.secondsToHHMMSS(this.spentTime) },
-      { label: 'Ratings', value: this.userRatings.join(', ') }
+      { label: 'Ratings', value: this.userRatingsAsString() }
     ];
   }
 }
