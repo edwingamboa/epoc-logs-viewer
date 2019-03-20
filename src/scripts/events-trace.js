@@ -116,7 +116,6 @@ class EventsTrace {
   }
 
   determineUserRatings (lastTwoActions) {
-    console.log('lastTwoActions', lastTwoActions);
     let segmentUserRatings = [];
     if (lastTwoActions.length === 2) {
       if (userRatings.indexOf(lastTwoActions[0]) > -1) {
@@ -126,7 +125,6 @@ class EventsTrace {
         }
       }
     }
-    console.log('segmentUserRatings', segmentUserRatings);
     return segmentUserRatings;
   }
 }
