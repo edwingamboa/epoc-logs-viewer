@@ -14,7 +14,7 @@ export const ADD_FILE_BUTTON_ID = 'addTraces';
 export const CURRENT_PM_GROUP_NAME = 'currentPm';
 export const CURRENT_PM_SELECTION_DIV_ID = 'currentPmSelectionDiv';
 export const TREND_DATA_HEAD_ROW = [['TimeStamp', 'Relative Change', 'Trend']];
-export const DEFAULT_SEGMENT_DISTANCE = 1;
+export const DEFAULT_SEGMENT_DISTANCE = 10;
 export const epocEventsData = {
   '1': 'Eyes opened start',
   '2': 'Eyes opened end',
