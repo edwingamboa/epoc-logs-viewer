@@ -33,6 +33,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     positive: 'Positive Trend',
     negative: 'Negative Trend'
   }
+  const DISTRIBUTION_CHART_RANGE = { y: { max: 100 } };
+  const CHANGE_VALUE_CHART_RANGE = { y: { min: -0.4, max: 0.4 } };
 
   addSetUpUIElements();
 
@@ -65,33 +67,51 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     segmentsChartsData = new Map();
     constants.segmentsOfInterest.forEach(function (segmentName) {
       let barChartId = segmentName + 'distributionChart';
+      let meanChangeChartId = segmentName + 'meanChangeChartId';
       let scatterChartId = segmentName + 'meanEngChart';
 
-      createContainersForSegmentCharts(segmentName, barChartId, scatterChartId);
+      createContainersForSegmentCharts(segmentName, barChartId, meanChangeChartId, scatterChartId);
 
       let barChartData = generateInitialBarChartData();
+      let meanChangeChartData = generateInitialRelativeChangeChartData();
       let scatterColumns = [];
-      segmentsChartsData.set(segmentName, generateSegmentChartsData(barChartData, barChartId, scatterColumns, scatterChartId));
+      segmentsChartsData.set(
+        segmentName,
+        generateSegmentChartsData(barChartData, barChartId, meanChangeChartData, meanChangeChartId, scatterColumns, scatterChartId)
+      );
     });
   }
 
-  function createContainersForSegmentCharts (segmentName, barChartId, scatterChartId) {
+  function createContainersForSegmentCharts (segmentName, barChartId, meanChangeChartId, scatterChartId) {
     const barChartTitle = 'Participants distribution';
-    const scatterTitle = 'Participants\' mean ' + PmProcessor.generateVerboseOfPm(currentPm);
+    const meanChangeChartTitle = 'Mean relative change';
+    const scatterTitle = `Participants' mean ${PmProcessor.generateVerboseOfPm(currentPm)}`;
+
     appendContainerForSegmentChart(segmentName, barChartId, barChartTitle);
+    appendContainerForSegmentChart(segmentName, meanChangeChartId, meanChangeChartTitle);
     appendContainerForSegmentChart(segmentName, scatterChartId, scatterTitle);
   }
 
-  function generateSegmentChartsData (barChartData, barChartId, scatterColumns, scatterChartId) {
+  function generateSegmentChartsData (barChartData, barChartId, meanChangeChartData, meanChangeChartId, scatterColumns, scatterChartId) {
     let segmentChartsData = {
       distributionData: barChartData,
       distributionChart: createChartForSegmentOfInterest(
-        generateChartObjectForSegment(barChartData, barChartId)
+        generateChartObjectForSegment(barChartData, barChartId, 'Participants (%)', DISTRIBUTION_CHART_RANGE.y.max)
       ),
       totalUsers: 0,
       scatterData: scatterColumns,
       scatterChart: createChartForSegmentOfInterest(
         generateChartObjectForScatter(scatterColumns, scatterChartId)
+      ),
+      meanChangeData: meanChangeChartData,
+      meanChangeChart: createChartForSegmentOfInterest(
+        generateChartObjectForSegment(
+          meanChangeChartData,
+          meanChangeChartId,
+          'Relative change',
+          CHANGE_VALUE_CHART_RANGE.y.max,
+          CHANGE_VALUE_CHART_RANGE.y.min
+        )
       ),
       userIds: [],
       spentTimes: [],
@@ -102,8 +122,15 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function generateInitialBarChartData () {
     let barChartData = [];
-    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, percentage: 0, count: 0 };
-    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, percentage: 0, count: 0 };
+    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, value: 0, count: 0 };
+    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, value: 0, count: 0 };
+    return barChartData;
+  }
+
+  function generateInitialRelativeChangeChartData () {
+    let barChartData = [];
+    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, value: 0, changeValues: [] };
+    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, value: 0, changeValues: [] };
     return barChartData;
   }
 
@@ -133,13 +160,13 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     return c3.generate(config);
   }
 
-  function generateChartObjectForSegment (segmentData, divId) {
-    return {
+  function generateChartObjectForSegment (segmentData, divId, yLabel, maxY, minY) {
+    let dataObject = {
       data: {
         json: segmentData,
         keys: {
           x: 'name',
-          value: [ 'percentage' ]
+          value: [ 'value' ]
         },
         type: 'bar',
         labels: {
@@ -155,10 +182,9 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         },
         y: {
           label: {
-            text: 'Participants (%)',
+            text: yLabel,
             position: 'outer-middle'
-          },
-          max: 100
+          }
         }
       },
       bindto: '#' + divId,
@@ -169,6 +195,13 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         show: false
       }
     };
+    if (maxY){
+      dataObject.axis.y.max = maxY;
+    }
+    if (minY){
+      dataObject.axis.y.min = minY;
+    }
+    return dataObject;
   }
 
   function generateChartObjectForScatter (segmentData, divId) {    
@@ -306,6 +339,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       segmentData.userIds.push(userId);
       segmentData.spentTimes.push(segmentInfo.spentTime);
       updateBarChartsData(segmentInfo);
+      updateChangeValueChartsData(segmentInfo);
       updateScatterChartsData(segmentInfo, userId);
     }
   }
@@ -317,18 +351,48 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     }
   }
 
+  function updateChangeValueChartsData (segmentInfo) {
+    let segmentName = segmentInfo.segmentName;
+    let segmentData = segmentsChartsData.get(segmentName);
+    let dataIndex = segmentInfo.isDesired() ? POSITIVE_RESULT_INDEX : NEGATIVE_RESULT_INDEX;
+    let changeValues = segmentData.meanChangeData[dataIndex].changeValues.concat(segmentInfo.changeValues);
+
+    segmentData.meanChangeData[dataIndex].changeValues = changeValues;
+    segmentsChartsData.set(segmentName, segmentData);
+  }
+
+  function calculateFinalValuesOfChangeValueCharts (segmentName) {
+    let segmentData = segmentsChartsData.get(segmentName);
+    if (segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues.length > 0) {
+      segmentData.meanChangeData[POSITIVE_RESULT_INDEX].value = ss.mean(
+        segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues
+      );
+    }
+    if (segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues.length > 0) {
+      segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].value = ss.mean(
+        segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues
+      );
+    }
+    console.log(segmentData.meanChangeData);
+    segmentsChartsData.set(segmentName, segmentData);
+  }
+
   function updateBarChartsData (segmentInfo) {
-    let segmentName = segmentInfo.segment.action;
+    let segmentName = segmentInfo.segmentName;
     let segmentData = segmentsChartsData.get(segmentName);
     let dataIndex = segmentInfo.isDesired() ? POSITIVE_RESULT_INDEX : NEGATIVE_RESULT_INDEX;
     segmentData.distributionData[dataIndex].count += 1;
+    segmentsChartsData.set(segmentName, segmentData);
+  }
 
-    segmentData.distributionData[POSITIVE_RESULT_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
+  function calculateFinalValuesOfBarCharts (segmentName) {
+    let segmentData = segmentsChartsData.get(segmentName);
+    segmentData.distributionData[POSITIVE_RESULT_INDEX].value = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[POSITIVE_RESULT_INDEX].count,
       segmentData.totalUsers,
       numberOfDecimalsForPercentages
     );
-    segmentData.distributionData[NEGATIVE_RESULT_INDEX].percentage = NumberProcessor.calculateRoundedPercentage(
+    segmentData.distributionData[NEGATIVE_RESULT_INDEX].value = NumberProcessor.calculateRoundedPercentage(
       segmentData.distributionData[NEGATIVE_RESULT_INDEX].count,
       segmentData.totalUsers,
       numberOfDecimalsForPercentages
@@ -352,9 +416,17 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   }
 
   function updateBarCharts (segmentName) {
+    calculateFinalValuesOfBarCharts(segmentName);
     let segmentChartData = segmentsChartsData.get(segmentName);
     let loadData = generateChartObjectForSegment(segmentChartData.distributionData).data;
     segmentChartData.distributionChart.load(loadData);
+  }
+
+  function updateChangeValueCharts (segmentName) {
+    calculateFinalValuesOfChangeValueCharts(segmentName);
+    let segmentChartData = segmentsChartsData.get(segmentName);
+    let loadData = generateChartObjectForSegment(segmentChartData.meanChangeData).data;
+    segmentChartData.meanChangeChart.load(loadData);
   }
 
   function updateScatterCharts (segmentName) {
@@ -368,6 +440,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     constants.segmentsOfInterest.forEach(function (segmentName) {
       updateSegmentDetails(segmentName);
       updateBarCharts(segmentName);
+      updateChangeValueCharts(segmentName);
       updateScatterCharts(segmentName);
     });
   }

@@ -159,9 +159,8 @@ class PerformanceMeasuresTrace {
 
       let segmentData = this.getData().slice(segment.initIndex, segmentFinalIndex + 1);
       let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
-      let changeValues = DataProcessor.getColumnOfData(segmentData, CHANGE_VAL_INDEX_IN_TREND_DATA);
       
-      let segmentInfo = new SegmentInfo(segment, pmValues, changeValues, relativeChangeData, pmId);
+      let segmentInfo = new SegmentInfo(segment, pmValues, relativeChangeData, pmId);
       this.segmentsInfo.get(pmId).push(segmentInfo);
     }
   }
@@ -222,9 +221,8 @@ class PerformanceMeasuresTrace {
 
     const pmColumnIndex = pmLogsInfo.get(pmId).newCol || pmLogsInfo.get(pmId).initCol;
     let pmValues = DataProcessor.getColumnOfData(segmentData, pmColumnIndex);
-    let changeValues = DataProcessor.getColumnOfData(segmentTrendData, CHANGE_VAL_INDEX_IN_TREND_DATA);
 
-    let jointSegmentsInfo = new SegmentInfo(refSegment, pmValues, changeValues, segmentTrendData, pmId);
+    let jointSegmentsInfo = new SegmentInfo(refSegment, pmValues, segmentTrendData, pmId);
     jointSegmentsInfo.spentTime = spentTime;
     jointSegmentsInfo.spentTimes = spentTimes;
     jointSegmentsInfo.isJoint = true;
@@ -254,13 +252,12 @@ class PerformanceMeasuresTrace {
 }
 
 class SegmentInfo {
-  constructor(segment, pmValues, changeValues, segmentTrendData, pmId) {
+  constructor(segment, pmValues, segmentTrendData, pmId) {
     this.segment = segment;
     if (segment.hasOwnProperty('time') && segment.hasOwnProperty('finishTime')) {
       this.spentTime = DateProcessor.elapsedSeconds(segment.time, segment.finishTime);
     }
     this.pmId = pmId;
-    this.meanChangeValue = ss.mean(changeValues);
     this.meanPmValue = ss.mean(pmValues);
     this.maxPmValue = ss.max(pmValues),
     this.minPmValue = ss.min(pmValues),
@@ -295,6 +292,13 @@ class SegmentInfo {
       spentTimeString += ` => ${spentTimesString}`;
     }
     return spentTimeString;
+  }
+
+  get changeValues () {
+    let changeValKey = DataProcessor.generateRelChangeValueKey(this.segmentName);
+    return this.trendData.map(function (trendPoint) {
+      return trendPoint[changeValKey];
+    });
   }
 
   get userRatings () {
