@@ -373,27 +373,36 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   }
 
   function updateSegmentDetails (segmentName) {
+    function detailsOfAListOfUsers (listOfUsers) {
+      return `${detailsOfPercentageOfUsers(listOfUsers.length)} => ${listOfUsers.join(', ')}`;
+    }
+
+    function detailsOfPercentageOfUsers (numberOfUsers) {
+      let percentageOfUsers = NumberProcessor.calculateRoundedPercentage(
+        numberOfUsers,
+        getTotalNumberOfUsers(),
+        numberOfDecimalsForPercentages
+      );
+      return `${numberOfUsers} (${percentageOfUsers}%)`;
+    }
+
     let segmentData = segmentsChartsData.get(segmentName);
     let detailsContainer = d3.select('#' + segmentName + ' #' + CHART_DETAILS_CONTAINER_ID);
-    let percentageOfUsers = NumberProcessor.calculateRoundedPercentage(
-      segmentData.totalUsers,
-      getTotalNumberOfUsers(),
-      numberOfDecimalsForPercentages
-    );
     let details = [
-      { label: 'Number of users: ', value: segmentData.totalUsers + ' (' + percentageOfUsers + '%)' }
+      { label: 'Number of users: ', value: detailsOfPercentageOfUsers(segmentData.totalUsers) }
     ];
+
     let missingUsers = missingUsersOfSegment(segmentName);
     if (missingUsers.length > 0) {
       details.push({
         label: 'Participants who skipped the segment: ',
-        value: segmentData.totalUsers === 0 ? 'All' : missingUsers.join(', ')
+        value: detailsOfAListOfUsers(missingUsers)
       });
     }
     if (segmentData.excludedDueToConstantPmUserIds.length > 0) {
       details.push({
         label: 'Participants excluded due to constant measure: ',
-        value: segmentData.excludedDueToConstantPmUserIds.join(', ')
+        value: detailsOfAListOfUsers(segmentData.excludedDueToConstantPmUserIds)
       });
     }
     if (segmentData.spentTimes.length > 0) {
