@@ -112,6 +112,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       ),
       userIds: [],
       spentTimes: [],
+      pmValues: [],
       excludedDueToConstantPmUserIds: []
     };
     return segmentChartsData;
@@ -348,6 +349,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       segmentData.totalUsers += 1;
       segmentData.userIds.push(userId);
       segmentData.spentTimes.push(segmentInfo.spentTime);
+      segmentData.pmValues = segmentData.pmValues.concat(segmentInfo.pmValues);
       updateBarChartsData(segmentInfo);
       updateChangeValueChartsData(segmentInfo);
       updateScatterChartsData(segmentInfo, userId);
@@ -499,7 +501,15 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         `(${NumberProcessor.round(meanSpentTime, numberOfDecimals)} s ±${NumberProcessor.round(sdSpentTime, numberOfDecimals)})`
       });
     }
-
+    let meanPmValue = ss.mean(segmentData.pmValues);
+    let sdPmValue = ss.sampleStandardDeviation(segmentData.pmValues);
+    numberOfDecimals = 5;
+    if (segmentData.pmValues.length > 0) {
+      details.push({
+        label: `Mean participants\' ${currentPm}: `,
+        value: `${NumberProcessor.round(meanPmValue, numberOfDecimals)} ±${NumberProcessor.round(sdPmValue, numberOfDecimals)}`
+      });
+    }
     let detailContainer;
     details.forEach(function (detail) {
       detailContainer = detailsContainer.append('div');

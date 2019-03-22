@@ -263,6 +263,7 @@ class SegmentInfo {
     this.maxPmValue = ss.max(pmValues),
     this.minPmValue = ss.min(pmValues),
     this.trendData = segmentTrendData;
+    this.pmValues = pmValues;
     this.isJoint = false;
   }
 
