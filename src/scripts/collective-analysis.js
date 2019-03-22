@@ -34,7 +34,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     negative: 'Negative Trend'
   }
   const DISTRIBUTION_CHART_RANGE = { y: { max: 100 } };
-  const CHANGE_VALUE_CHART_RANGE = { y: { min: -0.4, max: 0.4 } };
+  const CHANGE_VALUE_CHART_RANGE = { y: { min: -0.5, max: 0.5 } };
 
   addSetUpUIElements();
 
@@ -489,7 +489,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         value: detailsOfAListOfUsers(segmentData.excludedDueToConstantPmUserIds)
       });
     }
-    let meanSpentTime = ss.mean(segmentData.spentTimes);
+    let meanSpentTime = Math.floor(ss.mean(segmentData.spentTimes));
     let sdSpentTime = ss.sampleStandardDeviation(segmentData.spentTimes);
     let numberOfDecimals = 2;
     if (segmentData.spentTimes.length > 0) {
