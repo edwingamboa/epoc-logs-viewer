@@ -373,7 +373,6 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues
       );
     }
-    console.log(segmentData.meanChangeData);
     segmentsChartsData.set(segmentName, segmentData);
   }
 
