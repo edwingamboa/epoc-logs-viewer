@@ -248,6 +248,9 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       tooltip: {
         contents: function (d) {
           return generateUserTooltipInfoHTMLCode(segmentData[d[0].index]);
+        },
+        position: function (data, width, height, element) {
+          return { top: -height, left: 0};
         }
       }
     };
