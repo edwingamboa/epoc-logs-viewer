@@ -126,8 +126,8 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function generateInitialRelativeChangeChartData () {
     let barChartData = [];
-    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, value: 0, changeValues: [] };
-    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, value: 0, changeValues: [] };
+    barChartData[POSITIVE_RESULT_INDEX] = { name: TRENDS_LABELS.positive, value: 0, changeValues: [], sd: 0 };
+    barChartData[NEGATIVE_RESULT_INDEX] = { name: TRENDS_LABELS.negative, value: 0, changeValues: [], sd: 0 };
     return barChartData;
   }
 
@@ -168,7 +168,13 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let chartObject = generateChartObjectForSegment(segmentData, divId, 'Relative change');
     chartObject.axis.y.max = CHANGE_VALUE_CHART_RANGE.y.max;
     chartObject.axis.y.min = CHANGE_VALUE_CHART_RANGE.y.min;
-    chartObject.data.labels = true;
+    chartObject.data.labels = {
+      format: function (v, id, i) {
+        if (i !== undefined) {
+          return `${v} ±${segmentData[i].sd}`;
+        }
+      }
+    };
     chartObject.grid = { y: { lines: [ { value: 0 } ] } };
     return chartObject;
   }
@@ -367,20 +373,18 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function calculateFinalValuesOfChangeValueCharts (segmentName) {
     let segmentData = segmentsChartsData.get(segmentName);
-    let meanOfData;
+    let mean;
+    let sd;
     const numberOfDecimals = 3;
-    if (segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues.length > 0) {
-      meanOfData = ss.mean(
-        segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues
-      );
-      segmentData.meanChangeData[POSITIVE_RESULT_INDEX].value = NumberProcessor.round(meanOfData, numberOfDecimals);
-    }
-    if (segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues.length > 0) {
-      meanOfData = ss.mean(
-        segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues
-      );
-      segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].value = NumberProcessor.round(meanOfData, numberOfDecimals);;
-    }
+    let indexes = [ POSITIVE_RESULT_INDEX, NEGATIVE_RESULT_INDEX];
+    indexes.forEach(function (index) {
+      if (segmentData.meanChangeData[index].changeValues.length > 0) {
+        mean = ss.mean(segmentData.meanChangeData[index].changeValues);
+        sd = ss.sampleStandardDeviation(segmentData.meanChangeData[index].changeValues);
+        segmentData.meanChangeData[index].value = NumberProcessor.round(mean, numberOfDecimals);
+        segmentData.meanChangeData[index].sd = NumberProcessor.round(sd, numberOfDecimals);
+      }
+    });
     segmentsChartsData.set(segmentName, segmentData);
   }
 
@@ -485,10 +489,14 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         value: detailsOfAListOfUsers(segmentData.excludedDueToConstantPmUserIds)
       });
     }
+    let meanSpentTime = ss.mean(segmentData.spentTimes);
+    let sdSpentTime = ss.sampleStandardDeviation(segmentData.spentTimes);
+    let numberOfDecimals = 2;
     if (segmentData.spentTimes.length > 0) {
       details.push({
         label: 'Mean participants\' spent time (HH:MM:SS): ',
-        value: DateProcessor.secondsToHHMMSS((ss.mean(segmentData.spentTimes)))
+        value: `${DateProcessor.secondsToHHMMSS(meanSpentTime)} ` +
+        `(${NumberProcessor.round(meanSpentTime, numberOfDecimals)} s ±${NumberProcessor.round(sdSpentTime, numberOfDecimals)})`
       });
     }
 

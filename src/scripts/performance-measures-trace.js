@@ -259,6 +259,7 @@ class SegmentInfo {
     }
     this.pmId = pmId;
     this.meanPmValue = ss.mean(pmValues);
+    this.sdPmValue = ss.sampleStandardDeviation(pmValues);
     this.maxPmValue = ss.max(pmValues),
     this.minPmValue = ss.min(pmValues),
     this.trendData = segmentTrendData;
@@ -326,10 +327,14 @@ class SegmentInfo {
   }
 
   get details () {
-    const numberOfDecimals = 5;
+    const numberOfDecimals = 3;
     const defaultNumberOfVisits = 1
     return [
-      { label: `Mean ${this.pmId}`, value: NumberProcessor.round(this.meanPmValue, numberOfDecimals) },
+      {
+        label: `Mean ${this.pmId}`,
+        value: `${NumberProcessor.round(this.meanPmValue, numberOfDecimals)} ` +
+        `± ${NumberProcessor.round(this.sdPmValue, numberOfDecimals)}`
+      },
       { label: `Max ${this.pmId}`, value: NumberProcessor.round(this.maxPmValue, numberOfDecimals) },
       { label: `Min ${this.pmId}`, value: NumberProcessor.round(this.minPmValue, numberOfDecimals) },
       { label: 'Number of visits', value: this.isJoint ? this.spentTimes.length : defaultNumberOfVisits },
