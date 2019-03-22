@@ -96,7 +96,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let segmentChartsData = {
       distributionData: barChartData,
       distributionChart: createChartForSegmentOfInterest(
-        generateChartObjectForSegment(barChartData, barChartId, 'Participants (%)', DISTRIBUTION_CHART_RANGE.y.max)
+        generateChartObjectForBarChart(barChartData, barChartId)
       ),
       totalUsers: 0,
       scatterData: scatterColumns,
@@ -105,12 +105,9 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       ),
       meanChangeData: meanChangeChartData,
       meanChangeChart: createChartForSegmentOfInterest(
-        generateChartObjectForSegment(
+        generateChartObjectForChangeValueChart(
           meanChangeChartData,
-          meanChangeChartId,
-          'Relative change',
-          CHANGE_VALUE_CHART_RANGE.y.max,
-          CHANGE_VALUE_CHART_RANGE.y.min
+          meanChangeChartId
         )
       ),
       userIds: [],
@@ -160,7 +157,23 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     return c3.generate(config);
   }
 
-  function generateChartObjectForSegment (segmentData, divId, yLabel, maxY, minY) {
+  function generateChartObjectForBarChart (segmentData, divId) {
+    let chartObject = generateChartObjectForSegment(segmentData, divId, 'Participants (%)');
+    chartObject.axis.y.max = DISTRIBUTION_CHART_RANGE.y.max;
+    chartObject.data.labels = { format: function (v) { return v + '%'; } };
+    return chartObject;
+  }
+
+  function generateChartObjectForChangeValueChart (segmentData, divId) {
+    let chartObject = generateChartObjectForSegment(segmentData, divId, 'Relative change');
+    chartObject.axis.y.max = CHANGE_VALUE_CHART_RANGE.y.max;
+    chartObject.axis.y.min = CHANGE_VALUE_CHART_RANGE.y.min;
+    chartObject.data.labels = true;
+    chartObject.grid = { y: { lines: [ { value: 0 } ] } };
+    return chartObject;
+  }
+
+  function generateChartObjectForSegment (segmentData, divId, yLabel) {
     let dataObject = {
       data: {
         json: segmentData,
@@ -169,9 +182,6 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
           value: [ 'value' ]
         },
         type: 'bar',
-        labels: {
-          format: function (v) { return v + '%'; }
-        },
         color: function (color, d) {
           return COLOR_CODES[d.index];
         }
@@ -195,12 +205,6 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         show: false
       }
     };
-    if (maxY){
-      dataObject.axis.y.max = maxY;
-    }
-    if (minY){
-      dataObject.axis.y.min = minY;
-    }
     return dataObject;
   }
 
@@ -363,15 +367,19 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function calculateFinalValuesOfChangeValueCharts (segmentName) {
     let segmentData = segmentsChartsData.get(segmentName);
+    let meanOfData;
+    const numberOfDecimals = 3;
     if (segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues.length > 0) {
-      segmentData.meanChangeData[POSITIVE_RESULT_INDEX].value = ss.mean(
+      meanOfData = ss.mean(
         segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues
       );
+      segmentData.meanChangeData[POSITIVE_RESULT_INDEX].value = NumberProcessor.round(meanOfData, numberOfDecimals);
     }
     if (segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues.length > 0) {
-      segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].value = ss.mean(
+      meanOfData = ss.mean(
         segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues
       );
+      segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].value = NumberProcessor.round(meanOfData, numberOfDecimals);;
     }
     segmentsChartsData.set(segmentName, segmentData);
   }
@@ -417,14 +425,14 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   function updateBarCharts (segmentName) {
     calculateFinalValuesOfBarCharts(segmentName);
     let segmentChartData = segmentsChartsData.get(segmentName);
-    let loadData = generateChartObjectForSegment(segmentChartData.distributionData).data;
+    let loadData = generateChartObjectForBarChart(segmentChartData.distributionData).data;
     segmentChartData.distributionChart.load(loadData);
   }
 
   function updateChangeValueCharts (segmentName) {
     calculateFinalValuesOfChangeValueCharts(segmentName);
     let segmentChartData = segmentsChartsData.get(segmentName);
-    let loadData = generateChartObjectForSegment(segmentChartData.meanChangeData).data;
+    let loadData = generateChartObjectForChangeValueChart(segmentChartData.meanChangeData).data;
     segmentChartData.meanChangeChart.load(loadData);
   }
 
