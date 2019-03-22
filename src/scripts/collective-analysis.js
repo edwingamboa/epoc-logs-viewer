@@ -146,7 +146,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         .attr('class', 'col-sm-12');
     }
     let chartContainer = segmentChartsDiv.append('div')
-      .attr('class', 'col-sm-6');
+      .attr('class', 'col-sm-4');
     chartContainer.append('h5')
       .text(title);
     chartContainer.append('div')
