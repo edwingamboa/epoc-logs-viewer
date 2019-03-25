@@ -506,7 +506,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     }
     let meanPmValue = ss.mean(segmentData.pmValues);
     let sdPmValue = ss.sampleStandardDeviation(segmentData.pmValues);
-    numberOfDecimals = 5;
+    numberOfDecimals = 3;
     if (segmentData.pmValues.length > 0) {
       details.push({
         label: `Mean participants\' ${currentPm}: `,
