@@ -161,7 +161,13 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   function generateChartObjectForBarChart (segmentData, divId) {
     let chartObject = generateChartObjectForSegment(segmentData, divId, 'Participants (%)');
     chartObject.axis.y.max = DISTRIBUTION_CHART_RANGE.y.max;
-    chartObject.data.labels = { format: function (v) { return v + '%'; } };
+    chartObject.data.labels = {
+      format: function (v, id, i) {
+        if (i !== undefined) {
+          return `${v} % (N=${segmentData[i].count})`;
+        }
+      }
+    };
     return chartObject;
   }
 
