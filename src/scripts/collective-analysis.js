@@ -283,7 +283,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
     let max = ss.max(values);
     let min = ss.min(values);
     let step = (max - min) / 4;
-    let lineRegionsLabels = [ '++', '+', '', '-', '--' ];
+    let lineRegionsLabels = [ '', '++', '+', '-', '--' ];
     let regionsLines = [];
     let regionLine;
     const numberOfDecimals = 2;
@@ -291,10 +291,10 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
       regionLine = {
         value: max - (step * i)
       };
-      if (lineRegionsLabels[i] !== '') {
+      if (lineRegionsLabels[i] === '+') {
+        regionLine.text = `${NumberProcessor.round(regionLine.value, numberOfDecimals)} +`;
+      } else if (lineRegionsLabels[i] !== '') {
         regionLine.text = lineRegionsLabels[i];
-      } else {
-        regionLine.text = NumberProcessor.round(regionLine.value, numberOfDecimals);
       }
       regionsLines.push(regionLine);
     }
