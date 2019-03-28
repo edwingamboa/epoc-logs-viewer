@@ -25,7 +25,7 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
   const CHARTS_DIV_ID = 'chartsContainer';
   const TOTAL_USERS_TEXT_ID = 'totalUsersText';
   const CHART_DETAILS_CONTAINER_ID = 'detailsContainer';
-  const CHART_HEIGHT = 200;
+  const CHART_HEIGHT = 250;
   const numberOfDecimalsForPercentages = 2;
   const SET_UP_SUBMIT_EVENT_ID = 'setUpSubmitBtn';
   const SUFFIX_TITLE_ID = 'suffixTitle';
