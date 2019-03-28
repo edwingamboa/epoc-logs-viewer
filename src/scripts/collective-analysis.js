@@ -8,6 +8,7 @@ import * as d3 from 'd3';
 import c3 from 'c3';
 import * as constants from './constants';
 import * as ss from 'simple-statistics';
+import * as ttest from 'ttest';
 import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './utils';
 
 (function () {
@@ -396,6 +397,12 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         segmentData.meanChangeData[index].sd = NumberProcessor.round(sd, numberOfDecimals);
       }
     });
+    let tTestResult = ttest(
+      segmentData.meanChangeData[POSITIVE_RESULT_INDEX].changeValues,
+      segmentData.meanChangeData[NEGATIVE_RESULT_INDEX].changeValues,
+      { varEqual: true }
+    );
+    segmentData.tTestResult = tTestResult;
     segmentsChartsData.set(segmentName, segmentData);
   }
 
@@ -460,10 +467,10 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
 
   function updateAllCharts () {
     constants.segmentsOfInterest.forEach(function (segmentName) {
-      updateSegmentDetails(segmentName);
       updateBarCharts(segmentName);
       updateChangeValueCharts(segmentName);
       updateScatterCharts(segmentName);
+      updateSegmentDetails(segmentName);
     });
   }
 
@@ -519,6 +526,16 @@ import { UIProcessor, NumberProcessor, DateProcessor, PmProcessor } from './util
         value: `${NumberProcessor.round(meanPmValue, numberOfDecimals)} ±${NumberProcessor.round(sdPmValue, numberOfDecimals)}`
       });
     }
+    // t-test
+    if (segmentData.hasOwnProperty('tTestResult')) {
+      let tValue = NumberProcessor.round(segmentData.tTestResult.testValue(), numberOfDecimals);
+      let pValue = segmentData.tTestResult.pValue().toExponential(numberOfDecimals);
+      details.push({
+        label: `Welch t-test (Negative trend vs Positive trend): `,
+        value: `t=${tValue}, p=${pValue}, α=0.05 (${segmentData.tTestResult.valid() ? 'No s' : 'S'}ignificant)`
+      });
+    }
+
     let detailContainer;
     details.forEach(function (detail) {
       detailContainer = detailsContainer.append('div');

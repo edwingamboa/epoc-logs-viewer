@@ -37,6 +37,11 @@ module.exports = {
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
         use: ['file-loader']
+      },
+      { // for ttest to work properly with fs
+        test: /\.js$/,
+        include: path.resolve(__dirname, 'node_modules/cephes/cephes-wrapper.js'),
+        loader: 'transform-loader/cacheable?brfs'
       }
     ]
   },
